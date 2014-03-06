@@ -9,8 +9,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.JSONP;
-import org.nebulostore.kademlia.KademliaRouting;
-import org.nebulostore.kademlia.NodeInfo;
+import org.nebulostore.kademlia.core.KademliaRouting;
+import org.nebulostore.kademlia.core.NodeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

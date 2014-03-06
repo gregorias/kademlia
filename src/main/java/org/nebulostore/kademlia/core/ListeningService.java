@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 /**
  * Objects with this interface listen for messages and forward them to registered listener.

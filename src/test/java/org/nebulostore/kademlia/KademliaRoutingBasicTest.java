@@ -9,6 +9,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.nebulostore.kademlia.core.KademliaException;
+import org.nebulostore.kademlia.core.KademliaRouting;
+import org.nebulostore.kademlia.core.KademliaRoutingBuilder;
+import org.nebulostore.kademlia.core.Key;
+import org.nebulostore.kademlia.core.NodeInfo;
 import org.nebulostore.kademlia.network.local.LocalMessaging;
 
 import static org.junit.Assert.assertEquals;

@@ -13,11 +13,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.nebulostore.kademlia.KademliaException;
-import org.nebulostore.kademlia.KademliaRouting;
-import org.nebulostore.kademlia.KademliaRoutingBuilder;
-import org.nebulostore.kademlia.Key;
-import org.nebulostore.kademlia.NodeInfo;
+import org.nebulostore.kademlia.core.KademliaException;
+import org.nebulostore.kademlia.core.KademliaRouting;
+import org.nebulostore.kademlia.core.KademliaRoutingBuilder;
+import org.nebulostore.kademlia.core.Key;
+import org.nebulostore.kademlia.core.NodeInfo;
 import org.nebulostore.kademlia.interfaces.rest.RestApp;
 import org.nebulostore.kademlia.network.UserGivenNetworkAddressDiscovery;
 import org.nebulostore.kademlia.network.socket.SimpleSocketByteListeningService;
@@ -25,6 +25,11 @@ import org.nebulostore.kademlia.network.socket.SimpleSocketByteSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Main access point to kademlia interface.
+ * 
+ * @author Grzegorz Milka
+ */
 public class Main {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	public static void main(String[] args) throws UnknownHostException {

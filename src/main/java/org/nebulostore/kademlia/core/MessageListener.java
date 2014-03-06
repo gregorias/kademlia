@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 interface MessageListener {
 	/**

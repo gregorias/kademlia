@@ -12,6 +12,11 @@ import org.nebulostore.kademlia.network.ByteSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implementation of {@link ByteSender} which sends messages in a blocking way.
+ * 
+ * @author Grzegorz Milka
+ */
 public class SimpleSocketByteSender implements ByteSender {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleSocketByteSender.class);
 	private static final int BUFFER_LENGTH = 4096;
@@ -19,6 +24,9 @@ public class SimpleSocketByteSender implements ByteSender {
 	public SimpleSocketByteSender() {
 	}
 
+	/**
+	 * Send given message. This method blocks till the sending operation is finished.
+	 */
 	@Override
 	public void sendMessageWithReply(InetSocketAddress dest, byte[] array,
 			ByteResponseHandler handler) {

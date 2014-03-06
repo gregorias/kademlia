@@ -5,7 +5,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.nebulostore.kademlia.KademliaRouting;
+import org.nebulostore.kademlia.core.KademliaRouting;
 
 @Path("get_key")
 public final class GetLocalKeyResource {

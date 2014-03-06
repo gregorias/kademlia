@@ -10,10 +10,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.nebulostore.kademlia.KademliaRouting;
+import org.nebulostore.kademlia.core.KademliaRouting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * REST interface for kademlia.
+ * 
+ * @author Grzegorz Milka
+ */
 public class RestApp {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestApp.class);
 	private final KademliaRouting kademlia_;

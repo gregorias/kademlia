@@ -9,10 +9,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.JSONP;
-import org.nebulostore.kademlia.KademliaException;
-import org.nebulostore.kademlia.KademliaRouting;
-import org.nebulostore.kademlia.Key;
-import org.nebulostore.kademlia.NodeInfo;
+import org.nebulostore.kademlia.core.KademliaException;
+import org.nebulostore.kademlia.core.KademliaRouting;
+import org.nebulostore.kademlia.core.Key;
+import org.nebulostore.kademlia.core.NodeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

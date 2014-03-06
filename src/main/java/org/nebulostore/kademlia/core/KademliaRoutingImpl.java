@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 import java.io.IOException;
 import java.io.Serializable;

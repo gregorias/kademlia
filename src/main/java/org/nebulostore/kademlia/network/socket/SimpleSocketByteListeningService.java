@@ -13,6 +13,12 @@ import org.nebulostore.kademlia.network.ByteListeningService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implementation of {@link ByteListeningService} which creates a ServerSocket and
+ * listens on single thread.
+ * 
+ * @author Grzegorz Milka
+ */
 public final class SimpleSocketByteListeningService implements ByteListeningService, Runnable {
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(SimpleSocketByteListeningService.class);

@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 public class KademliaException extends Exception {
 	private static final long serialVersionUID = 1L;

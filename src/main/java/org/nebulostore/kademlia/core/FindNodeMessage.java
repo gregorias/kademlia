@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 class FindNodeMessage extends MessageWithKnownRecipient {
 	private static final long serialVersionUID = 1L;

@@ -1,4 +1,4 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -136,7 +136,7 @@ public class KademliaRoutingBuilder {
 	 * Set delay used for periodic refreshing local node in the network.
 	 * 
 	 * @param delay delay in miliseconds
-	 * @return
+	 * @return this
 	 */
 	public KademliaRoutingBuilder setEntryRefreshingDelay(int delay) {
 		entryRefreshDelay_ = delay;

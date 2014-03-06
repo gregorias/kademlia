@@ -6,7 +6,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.nebulostore.kademlia.KademliaRouting;
+import org.nebulostore.kademlia.core.KademliaRouting;
 
 @Path("start")
 public final class KademliaStartResource {
