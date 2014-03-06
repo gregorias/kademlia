@@ -1,0 +1,15 @@
+<FindBugsFilter>
+    <Match>
+        <Bug code="PZLA" />
+    </Match>
+    <Match>
+         <Class name="~.*Test"/>
+    </Match>
+    <Match>
+         <Class name="~.*Bean"/>
+         <Or>
+             <Bug code="EI"/>
+             <Bug code="EI2"/>
+         </Or>
+    </Match>
+</FindBugsFilter>

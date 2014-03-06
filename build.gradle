@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'findbugs'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    runtime {
+        extendsFrom compile
+    }
+}
+
+dependencies {
+    compile group: 'com.google.guava', name: 'guava', version: '16.+'
+    compile group: 'com.google.inject', name: 'guice', version: '3.0'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'
+    compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.+'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.+'
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
+    runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
+    runtime group: 'com.owlike', name: 'genson', version: '0.+'
+}
+
+task copyAllDependencies(type: Copy) {
+    from configurations.runtime
+    into 'allLibs'
+}
+
+findbugs {
+    effort = "max"
+    excludeFilter = file("$rootProject.projectDir/config/findbugs/findbugsExcludeFilter.xml")
+    reportLevel = "low"
+    toolVersion = "2.0.3"
+    println toolVersion
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+ }

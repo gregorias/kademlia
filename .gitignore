@@ -1,0 +1,7 @@
+*.swp
+
+# Eclipse files
+.checkstyle
+.classpath
+.project
+.settings
