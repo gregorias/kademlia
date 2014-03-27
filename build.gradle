@@ -43,4 +43,4 @@ tasks.withType(FindBugs) {
         xml.enabled = false
         html.enabled = true
     }
- }
+}

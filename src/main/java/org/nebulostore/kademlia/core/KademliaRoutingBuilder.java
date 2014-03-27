@@ -458,10 +458,16 @@ public class KademliaRoutingBuilder {
 				if (ois != null) {
 					ois.close();
 				}
-				bais.close();
 			} catch (IOException e) {
 				LOGGER.error("translateFromByteToMessage() -> Caught unexpected"
 						+ " IOException during closing of stream", e);
+			} finally {
+				try {
+					bais.close();
+				} catch (IOException e) {
+					LOGGER.error("translateFromByteToMessage() -> Caught unexpected"
+							+ " IOException during closing of byte stream", e);
+				}
 			}
 		}
 		return msg;
@@ -481,11 +487,18 @@ public class KademliaRoutingBuilder {
 				if (oos != null) {
 					oos.close();
 				}
-				baos.close();
 			} catch (IOException e) {
 				LOGGER.error("translateFromMessageToByte() -> Caught unexpected"
 						+ " IOException during closing of stream", e);
 				return null;
+			} finally {
+				try {
+					baos.close();
+				} catch (IOException e) {
+					LOGGER.error("translateFromMessageToByte() -> Caught unexpected"
+							+ " IOException during closing of byte stream", e);
+					return null;
+				}
 			}
 		}
 		return baos.toByteArray();
