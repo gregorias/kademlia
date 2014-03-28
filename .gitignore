@@ -1,4 +1,9 @@
 *.swp
+.gradle
+
+allLibs
+bin
+build
 
 # Eclipse files
 .checkstyle
