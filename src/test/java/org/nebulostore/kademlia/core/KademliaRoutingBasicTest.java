@@ -1,6 +1,7 @@
 package org.nebulostore.kademlia.core;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Random;
@@ -184,11 +185,27 @@ public final class KademliaRoutingBasicTest {
 	}
 	
 	@Test
-	public void shouldReturnLocalKey() {
-		Key key = new Key(0);
-		builder_.setKey(key);
-		KademliaRouting kademlia = builder_.createPeer();
-		assertEquals(key, kademlia.getLocalKey());
+	public void shouldGetUnknownKey() throws KademliaException {
+		Key key0 = new Key(0);
+		Key key1 = new Key(1);
+
+		Collection<InetSocketAddress> peerAddresses = new LinkedList<>();
+		peerAddresses.add(localMessaging_.getNetworkAddressDiscovery(0).getNetworkAddress());
+	
+		builder_.setKey(key0);
+		KademliaRouting kademlia0 = builder_.createPeer();
+		kademlia0.start();
+
+		builder_.setKey(key1);
+		builder_.setByteListeningService(localMessaging_.getByteListeningService(1));
+		builder_.setNetworkAddressDiscovery(localMessaging_.getNetworkAddressDiscovery(1));
+		builder_.setInitialPeersWithoutKeys(peerAddresses);
+		KademliaRouting kademlia1 = builder_.createPeer();
+		kademlia1.start();
+		
+		assertTrue(doesRoutingTableContainKey(kademlia1.getRoutingTable(), key0));
+		kademlia1.stop();
+		kademlia0.stop();
 	}
 	
 	@Test
@@ -196,16 +213,16 @@ public final class KademliaRoutingBasicTest {
 		Key key0 = new Key(0);
 		Key key2 = new Key(2);
 		Key key3 = new Key(3);
-
+	
 		Collection<NodeInfo> peerInfos = new LinkedList<>();
 		peerInfos.add(new NodeInfo(key0,
 				localMessaging_.getNetworkAddressDiscovery(0).getNetworkAddress()));
-
+	
 		builder_.setKey(key0);
 		builder_.setBucketSize(1);
 		builder_.setEntryRefreshingDelay(100);
 		KademliaRouting kademlia0 = builder_.createPeer();
-
+	
 		StaticKademliaRoutingImpl kademlia2 = newStaticKademlia(2, 1, peerInfos);
 		StaticKademliaRoutingImpl kademlia3 = newStaticKademlia(3, 1, peerInfos);
 		kademlia0.start();
@@ -214,19 +231,13 @@ public final class KademliaRoutingBasicTest {
 		WaitingMessageResponseHandler waiter = new WaitingMessageResponseHandler();
 		kademlia2.sendPingToNode(key0, waiter);
 		waiter.waitForResponse();
-
+	
 		Collection<NodeInfo> routingTable = kademlia0.getRoutingTable();
-		boolean containsKey2 = false;
-		for (NodeInfo info: routingTable) {
-			if (info.getKey().equals(key2)) {
-				containsKey2 = true;
-			}
-		}
-		assertTrue(containsKey2);
+		assertTrue(doesRoutingTableContainKey(routingTable, key2));
 		kademlia2.stop();
 		builder_.setKey(key3);
 		kademlia3.start();
-
+	
 		waiter = new WaitingMessageResponseHandler();
 		WaitingForMessageListener pingListener = new WaitingForMessageListener();
 		kademlia3.setMessageListenerAdditionalActions(pingListener);
@@ -234,21 +245,29 @@ public final class KademliaRoutingBasicTest {
 		kademlia3.sendPingToNode(key0, waiter);
 		waiter.waitForResponse();
 		pingListener.waitForMessage();
-
-		containsKey2 = false;
-		boolean containsKey3 = false;
+	
 		routingTable = kademlia0.getRoutingTable();
-		for (NodeInfo info: routingTable) {
-			if (info.getKey().equals(key2)) {
-				containsKey2 = true;
-			} else if (info.getKey().equals(key3)) {
-				containsKey3 = true;
-			}
-		}
-		assertFalse(containsKey2);
-		assertTrue(containsKey3);
+		assertFalse(doesRoutingTableContainKey(routingTable, key2));
+		assertTrue(doesRoutingTableContainKey(routingTable, key3));
 		kademlia3.stop();
 		kademlia0.stop();
+	}
+
+	@Test
+	public void shouldReturnLocalKey() {
+		Key key = new Key(0);
+		builder_.setKey(key);
+		KademliaRouting kademlia = builder_.createPeer();
+		assertEquals(key, kademlia.getLocalKey());
+	}
+
+	private boolean doesRoutingTableContainKey(Collection<NodeInfo> infos, Key key) {
+		for (NodeInfo info: infos) {
+			if (info.getKey().equals(key)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private StaticKademliaRoutingImpl newStaticKademlia(int nr, int k, Collection<NodeInfo> knownPeers) {
@@ -258,4 +277,5 @@ public final class KademliaRoutingBasicTest {
 			new MessageListeningServiceAdapter(localMessaging_.getByteListeningService(nr)), k,
 			knownPeers);
 	}
+	
 }

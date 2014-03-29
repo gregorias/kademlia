@@ -131,7 +131,7 @@ class KademliaRoutingImpl implements KademliaRouting {
 			SortedSet<Key> candidateKeys = new BoundedSortedSet<>(new TreeSet<>(findKeyComparator), size);
 	
 			BlockingQueue<Future<Message>> replyQueue = new LinkedBlockingQueue<>();
-			MessageResponseHandler responseHandler = new FindNodesMessageResponseHandler(replyQueue);
+			MessageResponseHandler responseHandler = new QueuedMessageResponseHandler(replyQueue);
 	
 			Collection<NodeInfo> closestNodes = getClosestRoutingTableNodes(key, Math.max(alpha_, k_));
 	
@@ -397,10 +397,10 @@ class KademliaRoutingImpl implements KademliaRouting {
 		
 	}
 
-	private class FindNodesMessageResponseHandler implements MessageResponseHandler {
+	private class QueuedMessageResponseHandler implements MessageResponseHandler {
 		private final BlockingQueue<Future<Message>> outputQueue_;
 		
-		public FindNodesMessageResponseHandler(BlockingQueue<Future<Message>> outputQueue) {
+		public QueuedMessageResponseHandler(BlockingQueue<Future<Message>> outputQueue) {
 			outputQueue_ = outputQueue;
 		}
 
@@ -430,7 +430,7 @@ class KademliaRoutingImpl implements KademliaRouting {
 			outputQueue_.add(futureResponse);
 		}
 	}
-
+	
 	/**
 	 * Comparator of Kademlia {@link Key} with specified key based on closeness.
 	 * 
@@ -530,6 +530,12 @@ class KademliaRoutingImpl implements KademliaRouting {
 			}
 		}
 	}
+	
+	private void addPeerToBucket(NodeInfo peer) {
+		Collection<NodeInfo> peers = new LinkedList<>();
+		peers.add(peer);
+		addPeersToBuckets(peers);
+	}
 
 	private void addPeersToBuckets(Collection<NodeInfo> initialKnownPeers) {
 		List<List<NodeInfo>> tempBuckets = initializeKBuckets();
@@ -544,7 +550,8 @@ class KademliaRoutingImpl implements KademliaRouting {
 			List<NodeInfo> tempBucket = tempBuckets.get(i);
 			Collections.shuffle(tempBuckets.get(i), random_);
 			kBuckets_.get(i).addAll(
-					tempBucket.subList(0, Math.min(tempBucket.size(), k_)));
+					tempBucket.subList(0, Math.min(tempBucket.size(),
+							k_ - kBuckets_.get(i).size())));
 		}
 	}
 	
@@ -556,7 +563,29 @@ class KademliaRoutingImpl implements KademliaRouting {
 
 
 	private void checkKeysOfUnknownPeers(Collection<InetSocketAddress> initialPeerAddresses) {
-		/* TODO */
+		GetKeyMessage gkMsg = prepareGetKeyMessage();
+		BlockingQueue<Future<Message>> queue = new LinkedBlockingQueue<>();
+		MessageResponseHandler queuedMsgResponseHandler = new QueuedMessageResponseHandler(queue);
+		for (InetSocketAddress address: initialPeerAddresses) {
+			messageSender_.sendMessageWithReply(address, gkMsg, queuedMsgResponseHandler);
+		}
+		
+		for (int i = 0; i < initialPeerAddresses.size(); ++i) {
+			try {
+				Future<Message> future = queue.take();
+				PongMessage pong = null;
+				try {
+					pong = (PongMessage) future.get();
+					addPeerToBucket(pong.getSourceNodeInfo());
+				} catch (ClassCastException e) {
+					LOGGER.warn("checkKeysOfUnknownPeers() -> received message which is not pong: %s", pong);
+				} catch (ExecutionException e) {
+					LOGGER.info("checkKeysOfUnknownPeers() -> exception happened when trying to get key from host", e);
+				}
+			} catch (InterruptedException e) {
+				throw new IllegalStateException("Unexpected interrupt");
+			}
+		}
 	}
 
 
@@ -617,6 +646,11 @@ class KademliaRoutingImpl implements KademliaRouting {
 		}
 		return kBuckets;
 	}
+
+	private GetKeyMessage prepareGetKeyMessage() {
+		return new GetKeyMessage(getLocalNodeInfo());
+	}
+
 
 	/**
 	 * Add (if possible) information from sender of a message.
