@@ -3,7 +3,7 @@ package org.nebulostore.kademlia.network;
 import java.net.InetSocketAddress;
 
 /**
- * {@link NetworkAddressDiscovery} which always returns the same, given to constructor, address.
+ * {@link NetworkAddressDiscovery} which always returns the same address given at initialization.
  * 
  * @author Grzegorz Milka
  *

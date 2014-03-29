@@ -1,5 +1,6 @@
-package org.nebulostore.kademlia;
+package org.nebulostore.kademlia.core;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Random;
@@ -17,6 +18,7 @@ import org.nebulostore.kademlia.core.NodeInfo;
 import org.nebulostore.kademlia.network.local.LocalMessaging;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public final class KademliaRoutingBasicTest {
@@ -33,10 +35,10 @@ public final class KademliaRoutingBasicTest {
 
 		builder_ = new KademliaRoutingBuilder(RANDOM);
 
-		builder_.setByteListeningService(localMessaging_.getByteListeningService());
+		builder_.setByteListeningService(localMessaging_.getByteListeningService(0));
 		builder_.setByteSender(localMessaging_.getByteSender());
 		builder_.setExecutor(scheduledExecutor_);
-		builder_.setNetworkAddressDiscovery(localMessaging_.getNetworkAddressDiscovery());
+		builder_.setNetworkAddressDiscovery(localMessaging_.getNetworkAddressDiscovery(0));
 	}
 
 	@After
@@ -51,7 +53,7 @@ public final class KademliaRoutingBasicTest {
 		KademliaRouting kademlia0 = builder_.createPeer();
 		Collection<NodeInfo> peerInfos = new LinkedList<>();
 		peerInfos .add(new NodeInfo(key0,
-				localMessaging_.getNetworkAddressDiscovery().getNetworkAddress()));
+				localMessaging_.getNetworkAddressDiscovery(0).getNetworkAddress()));
 		builder_.setInitialPeersWithKeys(peerInfos);
 		builder_.setKey(key1);
 		KademliaRouting kademlia1 = builder_.createPeer();
@@ -121,7 +123,7 @@ public final class KademliaRoutingBasicTest {
 		KademliaRouting kademlia0 = builder_.createPeer();
 		Collection<NodeInfo> peerInfos = new LinkedList<>();
 		peerInfos .add(new NodeInfo(key0,
-				localMessaging_.getNetworkAddressDiscovery().getNetworkAddress()));
+				localMessaging_.getNetworkAddressDiscovery(0).getNetworkAddress()));
 		builder_.setInitialPeersWithKeys(peerInfos);
 		builder_.setKey(key1);
 		KademliaRouting kademlia1 = builder_.createPeer();
@@ -187,5 +189,73 @@ public final class KademliaRoutingBasicTest {
 		builder_.setKey(key);
 		KademliaRouting kademlia = builder_.createPeer();
 		assertEquals(key, kademlia.getLocalKey());
+	}
+	
+	@Test
+	public void shouldRefreshRoutingTable() throws InterruptedException, KademliaException, IOException {
+		Key key0 = new Key(0);
+		Key key2 = new Key(2);
+		Key key3 = new Key(3);
+
+		Collection<NodeInfo> peerInfos = new LinkedList<>();
+		peerInfos.add(new NodeInfo(key0,
+				localMessaging_.getNetworkAddressDiscovery(0).getNetworkAddress()));
+
+		builder_.setKey(key0);
+		builder_.setBucketSize(1);
+		builder_.setEntryRefreshingDelay(100);
+		KademliaRouting kademlia0 = builder_.createPeer();
+
+		StaticKademliaRoutingImpl kademlia2 = newStaticKademlia(2, 1, peerInfos);
+		StaticKademliaRoutingImpl kademlia3 = newStaticKademlia(3, 1, peerInfos);
+		kademlia0.start();
+		kademlia2.start();
+		
+		WaitingMessageResponseHandler waiter = new WaitingMessageResponseHandler();
+		kademlia2.sendPingToNode(key0, waiter);
+		waiter.waitForResponse();
+
+		Collection<NodeInfo> routingTable = kademlia0.getRoutingTable();
+		boolean containsKey2 = false;
+		for (NodeInfo info: routingTable) {
+			if (info.getKey().equals(key2)) {
+				containsKey2 = true;
+			}
+		}
+		assertTrue(containsKey2);
+		kademlia2.stop();
+		builder_.setKey(key3);
+		kademlia3.start();
+
+		waiter = new WaitingMessageResponseHandler();
+		WaitingForMessageListener pingListener = new WaitingForMessageListener();
+		kademlia3.setMessageListenerAdditionalActions(pingListener);
+		pingListener.initializeCatchingTheNextMessage();
+		kademlia3.sendPingToNode(key0, waiter);
+		waiter.waitForResponse();
+		pingListener.waitForMessage();
+
+		containsKey2 = false;
+		boolean containsKey3 = false;
+		routingTable = kademlia0.getRoutingTable();
+		for (NodeInfo info: routingTable) {
+			if (info.getKey().equals(key2)) {
+				containsKey2 = true;
+			} else if (info.getKey().equals(key3)) {
+				containsKey3 = true;
+			}
+		}
+		assertFalse(containsKey2);
+		assertTrue(containsKey3);
+		kademlia3.stop();
+		kademlia0.stop();
+	}
+	
+	private StaticKademliaRoutingImpl newStaticKademlia(int nr, int k, Collection<NodeInfo> knownPeers) {
+		return new StaticKademliaRoutingImpl(new NodeInfo(new Key(nr),
+				localMessaging_.getNetworkAddressDiscovery(nr).getNetworkAddress()),
+			new MessageSenderAdapter(localMessaging_.getByteSender()),
+			new MessageListeningServiceAdapter(localMessaging_.getByteListeningService(nr)), k,
+			knownPeers);
 	}
 }

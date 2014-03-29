@@ -62,6 +62,14 @@ public class Key implements Serializable {
 		return xor(otherKey).key_;
 	}
 	
+	/**
+	 * @return most significant bit index of distance between this key and argument.
+	 */
+	int getDistanceBit(Key otherKey) {
+		BitSet distance = otherKey.calculateDistance(this);
+		return distance.previousSetBit(distance.length() - 1);
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

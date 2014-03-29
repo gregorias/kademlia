@@ -1,11 +1,5 @@
 package org.nebulostore.kademlia.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +13,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.nebulostore.kademlia.network.ByteListener;
 import org.nebulostore.kademlia.network.ByteListeningService;
-import org.nebulostore.kademlia.network.ByteResponseHandler;
 import org.nebulostore.kademlia.network.ByteSender;
 import org.nebulostore.kademlia.network.NetworkAddressDiscovery;
 import org.slf4j.Logger;
@@ -279,60 +272,11 @@ public class KademliaRoutingBuilder {
 			Key destKey = msg.getDestinationNodeInfo().getKey();
 			MessageListener listener = listenerMap_.get(destKey);
 			if (listener == null) {
-				LOGGER.warn("getRecipient({}) -> Received message to unknown kademlia peer.", msg);
+				LOGGER.debug("getRecipient({}) -> Received message to unknown kademlia peer.", msg);
 			}
 			return listener;
 		}
 
-	}
-
-	private static class MessageListeningServiceAdapter implements ListeningService {
-		private final ByteListeningService byteListeningService_;
-		private final ByteToMessageTranslatingListener byteToMsgListener_;
-		private MessageListener listener_;
-
-		public MessageListeningServiceAdapter(ByteListeningService byteListeningService) {
-			byteListeningService_ = byteListeningService;
-			byteToMsgListener_ = new ByteToMessageTranslatingListener();
-		}
-
-		@Override
-		public void registerListener(MessageListener listener) {
-			assert listener_ == null;
-			listener_ = listener;
-			byteListeningService_.registerListener(byteToMsgListener_);
-
-		}
-
-		@Override
-		public void unregisterListener(MessageListener listener) {
-			assert listener_ != null && listener_.equals(listener);
-			byteListeningService_.unregisterListener(byteToMsgListener_);
-			listener_ = null;
-		}
-
-		private class ByteToMessageTranslatingListener implements ByteListener {
-			@Override
-			public byte[] receiveByteArrayWithResponse(byte[] byteMsg) {
-				Message msg = translateFromByteToMessage(byteMsg);
-				Message response = null;
-				if (msg instanceof FindNodeMessage) {
-					response = listener_.receiveFindNodeMessage((FindNodeMessage) msg);
-				} else if (msg instanceof GetKeyMessage) {
-					response = listener_.receiveGetKeyMessage((GetKeyMessage) msg);
-				} else if (msg instanceof PingMessage) {
-					response = listener_.receivePingMessage((PingMessage) msg);
-				} else {
-					LOGGER.error("receiveByteArrayWithResponse() -> received unexpected type");
-				}
-				if (response == null) {
-					return null;
-				} else {
-					return translateFromMessageToByte(response);
-				}
-			}
-
-		}
 	}
 
 	private static class MessageListeningServiceImpl implements ListeningService {
@@ -356,57 +300,6 @@ public class KademliaRoutingBuilder {
 			LOGGER.trace("unregisterListener({})", listener);
 			demux_.unregisterListener(key_);
 			LOGGER.trace("unregisterListener(): void");
-		}
-	}
-
-	private static class MessageSenderAdapter implements MessageSender {
-		private static final Logger LOGGER = LoggerFactory.getLogger(MessageSenderAdapter.class);
-		private ByteSender byteSender_;
-		
-		public MessageSenderAdapter(ByteSender byteSender) {
-			byteSender_ = byteSender;
-		}
-
-		@Override
-		public void sendMessageWithReply(InetSocketAddress dest, Message msg,
-				MessageResponseHandler handler) {
-			LOGGER.debug("sendMessageWithReply({}, {}, {})", dest, msg, handler);
-			byte[] array = translateFromMessageToByte(msg);
-			byteSender_.sendMessageWithReply(dest, array, new ByteResponseHandlerAdapter(handler));
-		}
-		
-		private static class ByteResponseHandlerAdapter implements ByteResponseHandler {
-			private final MessageResponseHandler handler_;
-
-			public ByteResponseHandlerAdapter(MessageResponseHandler handler) {
-				handler_ = handler;
-			}
-
-			@Override
-			public void onResponse(byte[] response) {
-				Message message = translateFromByteToMessage(response);
-				if (message == null) {
-					handler_.onResponseError(new IOException(
-							"Could not deserialize response to correct message."));
-				} else {
-					handler_.onResponse(message);
-				}
-			}
-
-			@Override
-			public void onResponseError(IOException e) {
-				handler_.onResponseError(e);
-			}
-
-			@Override
-			public void onSendSuccessful() {
-				handler_.onSendSuccessful();
-			}
-
-			@Override
-			public void onSendError(IOException e) {
-				handler_.onSendError(e);
-			}
 		}
 	}
 
@@ -440,67 +333,5 @@ public class KademliaRoutingBuilder {
 		} else {
 			return Key.newRandomKey(random_);
 		}
-	}
-
-	private static Message translateFromByteToMessage(byte[] byteMsg) {
-		Message msg = null;
-		InputStream bais = new ByteArrayInputStream(byteMsg);
-		ObjectInputStream ois = null;
-		try {
-			ois = new ObjectInputStream(bais);
-			msg = (Message) ois.readObject();
-		} catch (ClassCastException | ClassNotFoundException e) {
-			LOGGER.warn("translateFromByteToMessage() -> Could not deserialize message", e);
-		} catch (IOException e) {
-			LOGGER.error("translateFromByteToMessage() -> Caught unexpected IOException", e);
-		} finally {
-			try {
-				if (ois != null) {
-					ois.close();
-				}
-			} catch (IOException e) {
-				LOGGER.error("translateFromByteToMessage() -> Caught unexpected"
-						+ " IOException during closing of stream", e);
-			} finally {
-				try {
-					bais.close();
-				} catch (IOException e) {
-					LOGGER.error("translateFromByteToMessage() -> Caught unexpected"
-							+ " IOException during closing of byte stream", e);
-				}
-			}
-		}
-		return msg;
-	}
-
-	private static byte[] translateFromMessageToByte(Message message) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = null;
-		try {
-			oos = new ObjectOutputStream(baos);
-			oos.writeObject(message);
-		} catch (IOException e) {
-			LOGGER.error("translateFromMessageToByte() -> Caught unexpected IOException", e);
-			return null;
-		} finally {
-			try {
-				if (oos != null) {
-					oos.close();
-				}
-			} catch (IOException e) {
-				LOGGER.error("translateFromMessageToByte() -> Caught unexpected"
-						+ " IOException during closing of stream", e);
-				return null;
-			} finally {
-				try {
-					baos.close();
-				} catch (IOException e) {
-					LOGGER.error("translateFromMessageToByte() -> Caught unexpected"
-							+ " IOException during closing of byte stream", e);
-					return null;
-				}
-			}
-		}
-		return baos.toByteArray();
 	}
 }
