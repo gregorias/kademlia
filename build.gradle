@@ -21,6 +21,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.+'
     testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
+    testCompile project(':dfuntesting')
     runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
     runtime group: 'com.owlike', name: 'genson', version: '0.+'
 }
@@ -32,7 +33,7 @@ task copyAllDependencies(type: Copy) {
 
 findbugs {
     effort = "max"
-    excludeFilter = file("$rootProject.projectDir/config/findbugs/findbugsExcludeFilter.xml")
+    excludeFilter = file("$project.projectDir/config/findbugs/findbugsExcludeFilter.xml")
     reportLevel = "low"
     toolVersion = "2.0.3"
     println toolVersion
