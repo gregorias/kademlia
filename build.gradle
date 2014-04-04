@@ -13,6 +13,8 @@ configurations {
 }
 
 dependencies {
+    compile group: 'commons-configuration', name: 'commons-configuration', version: '1.+'
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.+'
     compile group: 'com.google.guava', name: 'guava', version: '16.+'
     compile group: 'com.google.inject', name: 'guice', version: '3.0'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kademlia>
+    <local-net-address>
+        localhost
+    </local-net-address>
+    <local-net-port>
+        1024
+    </local-net-port>
+    <local-key>
+        0
+    </local-key>
+    <bootstrap-net-address>
+        localhost
+    </bootstrap-net-address>
+    <bootstrap-net-port>
+        1024
+    </bootstrap-net-port>
+    <rest-port>
+        3000
+    </rest-port>
+</kademlia>

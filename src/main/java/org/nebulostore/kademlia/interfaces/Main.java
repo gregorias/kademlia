@@ -1,5 +1,6 @@
 package org.nebulostore.kademlia.interfaces;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,6 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.nebulostore.kademlia.core.KademliaException;
 import org.nebulostore.kademlia.core.KademliaRouting;
 import org.nebulostore.kademlia.core.KademliaRoutingBuilder;
@@ -33,28 +36,36 @@ import org.slf4j.LoggerFactory;
 public class Main {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	public static void main(String[] args) throws UnknownHostException {
-		if (args.length < 5) {
-			System.out.println("Usage: Main HTTP_PORT LOCAL_LISTENING_PORT"
-					+ " KEY_0_LISTENING_PORT LOCAL_KEY KEY_0_ADDR [LOCAL_ADDR]");
+		if (args.length < 1) {
+			System.out.println("Usage: Main CONFIG_FILE");
 			return;
 		}
-		LOGGER.info("main({}, {}, {}, {}, {})", args[0], args[1], args[2], args[3], args[4]);
-
-		final URI baseURI = URI.create(String.format("http://localhost:%s/", args[0]));
-		final Key localKey = new Key(Integer.parseInt(args[3]));
-		InetAddress localInetAddress;
-		if (args.length == 6) {
-			localInetAddress = InetAddress.getByName(args[5]);
-		} else {
-			localInetAddress = InetAddress.getLocalHost();
+		LOGGER.info("main({})", args[0]);
+		String configFile = args[0];
+        XMLConfiguration config = null;
+		try {
+			config = new XMLConfiguration(new File(configFile));
+		} catch (ConfigurationException e) {
+			LOGGER.error("main() -> could not read configuration.", e);
+			return;
 		}
+		
+        XMLConfiguration kadConfig = config;
+		final InetAddress localInetAddress = InetAddress.getByName(kadConfig.getString("local-net-address"));
+		final int localPort = kadConfig.getInt("local-net-port");
+		final InetAddress hostZeroInetAddress = InetAddress.getByName(kadConfig.getString("bootstrap-net-address"));
+		final int hostZeroPort = kadConfig.getInt("bootstrap-net-port");
+		final Key localKey = new Key(kadConfig.getInt("local-key"));
+		final URI baseURI = URI.create(String.format("http://%s:%s/",
+				localInetAddress.getHostName(), kadConfig.getString("rest-port")));
+
 		final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 		final ExecutorService executor = Executors.newFixedThreadPool(1);
 
 		KademliaRoutingBuilder builder = new KademliaRoutingBuilder(new Random());
 		builder.setBucketSize(2);
 		SimpleSocketByteListeningService ssbls = new SimpleSocketByteListeningService(
-				Integer.parseInt(args[1]), executor);
+				localPort, executor);
 		try {
 			ssbls.start();
 		} catch (IOException e) {
@@ -67,23 +78,16 @@ public class Main {
 		Collection<NodeInfo> peersWithKnownAddresses = new LinkedList<>();
 		if (!localKey.equals(new Key(0))) {
 			peersWithKnownAddresses.add(new NodeInfo(
-					new Key(0), new InetSocketAddress(args[4], Integer.parseInt(args[2]))));
+					new Key(0), new InetSocketAddress(hostZeroInetAddress, hostZeroPort)));
 		}
 		builder.setInitialPeersWithKeys(peersWithKnownAddresses);
 		builder.setKey(localKey);
 		builder.setBucketSize(3);
-		builder.setNetworkAddressDiscovery(
-				new UserGivenNetworkAddressDiscovery(
-						new InetSocketAddress(localInetAddress, Integer.parseInt(args[1]))));
+		builder.setNetworkAddressDiscovery(new UserGivenNetworkAddressDiscovery(
+				new InetSocketAddress(localInetAddress, localPort)));
 		
 		KademliaRouting kademlia = builder.createPeer();
 		RestApp app = new RestApp(kademlia, baseURI);
-		try {
-			kademlia.start();
-		} catch (KademliaException e) {
-			LOGGER.error("main() -> kademlia.start()", e);
-			return;
-		}
 		app.run();
 		if (kademlia.isRunning()) {
 			try {
