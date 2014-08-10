@@ -1,5 +1,5 @@
 /**
- * Core interfaces and classes of Kademlia
+ * Core interfaces and classes of Kademlia.
  *
  * @author Grzegorz Milka
  */

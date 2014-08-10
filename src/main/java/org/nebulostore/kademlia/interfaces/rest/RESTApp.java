@@ -19,15 +19,15 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Grzegorz Milka
  */
-public class RestApp {
-	private static final Logger LOGGER = LoggerFactory.getLogger(RestApp.class);
+public class RESTApp {
+	private static final Logger LOGGER = LoggerFactory.getLogger(RESTApp.class);
 	private final KademliaRouting kademlia_;
 	private final URI uri_;
 	private final Lock lock_;
 	private final Condition shutDownCondition_;
 	private final AtomicBoolean hasShutDownBeenCalled_;
 
-	public RestApp(KademliaRouting kademlia, URI uri) {
+	public RESTApp(KademliaRouting kademlia, URI uri) {
 		kademlia_ = kademlia;
 		uri_ = uri;
 		lock_ = new ReentrantLock();
@@ -38,15 +38,15 @@ public class RestApp {
 	public void run() {
 		LOGGER.info("run()");
 		ResourceConfig config = createConfig();
-        final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri_, config);
-        try {
+    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri_, config);
+    try {
 			server.start();
 			lock_.lock();
 			try {
 				while (!hasShutDownBeenCalled_.get()) {
 					shutDownCondition_.await();
 				}
-		        server.shutdown();
+		    server.shutdown();
 			} catch (InterruptedException e) {
 				server.shutdownNow();
 				LOGGER.error("run() -> Unexpected exception.", e);

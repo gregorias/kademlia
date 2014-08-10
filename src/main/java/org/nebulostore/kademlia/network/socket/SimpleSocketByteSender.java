@@ -1,11 +1,12 @@
 package org.nebulostore.kademlia.network.socket;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import org.nebulostore.kademlia.network.ByteResponseHandler;
 import org.nebulostore.kademlia.network.ByteSender;
@@ -18,8 +19,8 @@ import org.slf4j.LoggerFactory;
  * @author Grzegorz Milka
  */
 public class SimpleSocketByteSender implements ByteSender {
+  public static final int INT_LENGTH = 4;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleSocketByteSender.class);
-	private static final int BUFFER_LENGTH = 4096;
 
 	public SimpleSocketByteSender() {
 	}
@@ -35,13 +36,14 @@ public class SimpleSocketByteSender implements ByteSender {
       byte[] answer = null;
       boolean hasSent = false;
       try (Socket socket = new Socket(dest.getAddress(), dest.getPort())) {
+        socket.getOutputStream().write(transformIntToByteArray(array.length));
     	  socket.getOutputStream().write(array);
     	  socket.shutdownOutput();
     	  hasSent = true;
     	  LOGGER.debug("sendMessageWithReply() -> sent successfully array of length: {}", array.length);
     	  handler.onSendSuccessful();
 
-    	  answer = readTillClosed(socket.getInputStream());
+    	  answer = readMessage(socket.getInputStream());
       } catch (IOException e) {
     	  if (hasSent) {
     		  handler.onResponseError(e);
@@ -50,30 +52,48 @@ public class SimpleSocketByteSender implements ByteSender {
     	  }
     	  return;
       }
-	  LOGGER.debug("sendMessageWithReply() -> handler.onResponse(length: {})", answer.length);
-      handler.onResponse(answer);
-	}
-	
-	private byte[] readTillClosed(InputStream is) throws IOException {
-		List<Byte> byteList = new LinkedList<>();
-		byte[] buffer = new byte[BUFFER_LENGTH];
-		while (true) {
-			int len = is.read(buffer);
-			if (len == -1) {
-				break;
-			}
-			for (int i = 0; i < len; ++i) {
-				byteList.add(buffer[i]);
-			}
-		}
-		byte[] readBuffer = new byte[byteList.size()];
-		int i = 0;
-		for (Byte oneByte: byteList) {
-			readBuffer[i] = oneByte;
-			++i;
-		}
-		
-		return readBuffer;
+	    if (answer == null) {
+	      LOGGER.debug("sendMessageWithReply() -> handler.onResponseError()");
+	      handler.onResponseError(new EOFException("Could not get response message."));
+	    } else {
+	      LOGGER.debug("sendMessageWithReply() -> handler.onResponse(length: {})", answer.length);
+	      handler.onResponse(answer);
+	    }
+	      
 	}
 
+  static byte[] readBytes(InputStream is, int byteCnt) throws IOException {
+    int remaining = byteCnt;
+  	byte[] array = new byte[byteCnt];
+  	while (remaining != 0) {
+  	  int len = is.read(array, byteCnt - remaining, remaining);
+  	  if (len < 1) {
+  	    return null;
+  	  }
+  	  remaining -= len;
+  	}
+  	return array;
+  }
+
+  static byte[] readMessage(InputStream is) throws IOException {
+  	byte[] intArray = readBytes(is, INT_LENGTH);
+  	if (intArray == null) {
+  	  return null;
+  	}
+  	IntBuffer intBuffer = ByteBuffer.wrap(intArray).asIntBuffer();
+  	int msgLength = intBuffer.get();
+  	
+  	byte[] msgArray = readBytes(is, msgLength);
+  	return msgArray;
+  }
+
+  static int transformByteArrayToInt(byte[] array) {
+    return ByteBuffer.wrap(array).asIntBuffer().get();
+  }
+
+  static byte[] transformIntToByteArray(int length) {
+    ByteBuffer b = ByteBuffer.allocate(INT_LENGTH);
+    b.putInt(length);
+    return b.array();
+  }
 }

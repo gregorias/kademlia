@@ -1,11 +1,8 @@
 package org.nebulostore.kademlia.network.socket;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.nebulostore.kademlia.network.ByteListener;
@@ -22,7 +19,6 @@ import org.slf4j.LoggerFactory;
 public final class SimpleSocketByteListeningService implements ByteListeningService, Runnable {
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(SimpleSocketByteListeningService.class);
-	private static final int BUFFER_LENGTH = 4096;
 
 	private final int port_;
 	private final ExecutorService serviceExecutor_;
@@ -65,12 +61,20 @@ public final class SimpleSocketByteListeningService implements ByteListeningServ
 			LOGGER.trace("Accepted connection from: " + clientSocket.getRemoteSocketAddress());
 
 			try {
-				byte[] msg = readTillClosed(clientSocket.getInputStream());
+				byte[] msg = SimpleSocketByteSender.readMessage(clientSocket.getInputStream());
+				if (msg == null) {
+			    LOGGER.warn("Could not get full message from remote host.");
+			    continue;
+				}
 				byte[] response = null;
 				synchronized (this) {
 					if (listener_ != null) {
 						response = listener_.receiveByteArrayWithResponse(msg);
-						clientSocket.getOutputStream().write(response);
+						if (response != null) {
+						  byte[] intBuffer = SimpleSocketByteSender.transformIntToByteArray(response.length);
+              clientSocket.getOutputStream().write(intBuffer);
+              clientSocket.getOutputStream().write(response);
+						}
 						clientSocket.shutdownOutput();
 					}
 				}
@@ -80,8 +84,7 @@ public final class SimpleSocketByteListeningService implements ByteListeningServ
 				try {
 					clientSocket.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+          LOGGER.warn("Caught IOException when closing socket.", e);
 				}
 			}
 		}
@@ -102,27 +105,5 @@ public final class SimpleSocketByteListeningService implements ByteListeningServ
 		} catch (IOException e) {
 			LOGGER.warn("IOException when closing server socket.", e);
 		}
-	}
-
-	private byte[] readTillClosed(InputStream is) throws IOException {
-		List<Byte> byteList = new LinkedList<>();
-		byte[] buffer = new byte[BUFFER_LENGTH];
-		while (true) {
-			int len = is.read(buffer);
-			if (len == -1) {
-				break;
-			}
-			for (int i = 0; i < len; ++i) {
-				byteList.add(buffer[i]);
-			}
-		}
-		byte[] readBuffer = new byte[byteList.size()];
-		int i = 0;
-		for (Byte oneByte : byteList) {
-			readBuffer[i] = oneByte;
-			++i;
-		}
-
-		return readBuffer;
 	}
 }

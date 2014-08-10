@@ -16,35 +16,40 @@ import org.slf4j.LoggerFactory;
 
 @Path("get_routing_table")
 public final class KademliaGetRoutingTableResource {
-	private static final Logger LOGGER = LoggerFactory.getLogger(KademliaGetRoutingTableResource.class);
-	private final KademliaRouting kademlia_;
-	
-	public KademliaGetRoutingTableResource(KademliaRouting kademlia) {
-		kademlia_ = kademlia;
-	}
-	
-	@GET
-	@JSONP
-	@Produces(MediaType.APPLICATION_JSON) 
-	public Response getRoutingTable() {
-		LOGGER.info("getRoutingTable()");
-		Collection<NodeInfo> nodeInfos;
-        try {
-            nodeInfos = kademlia_.getRoutingTable();
-        } catch (Exception e) {
-			LOGGER.info("getRoutingTable() -> bad request");
-            return Response.status(Response.Status.BAD_REQUEST).entity(
-            		String.format("Could not get routing table from kademlia: %s.", e)).build();
-        }
-        String[] parsedNodeInfos = new String[nodeInfos.size()];
-        int i = 0;
-        for (NodeInfo nodeInfo: nodeInfos) {
-        	parsedNodeInfos[i] = nodeInfo.toString();
-        	++i;
-        }
-        NodeInfoCollectionBean bean = new NodeInfoCollectionBean();
-        bean.setNodeInfo(parsedNodeInfos);
-		LOGGER.info("getRoutingTable() -> ok");
-        return Response.ok(bean).build();
-	}
+  private static final Logger LOGGER = LoggerFactory
+      .getLogger(KademliaGetRoutingTableResource.class);
+  private final KademliaRouting kademlia_;
+
+  public KademliaGetRoutingTableResource(KademliaRouting kademlia) {
+    kademlia_ = kademlia;
+  }
+
+  @GET
+  @JSONP
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getRoutingTable() {
+    LOGGER.info("getRoutingTable()");
+    Collection<NodeInfo> nodeInfos;
+    try {
+      nodeInfos = kademlia_.getRoutingTable();
+    } catch (Exception e) {
+      LOGGER.info("getRoutingTable() -> bad request");
+      return Response
+          .status(Response.Status.BAD_REQUEST)
+          .entity(
+              String
+                  .format("Could not get routing table from kademlia: %s.", e))
+          .build();
+    }
+    NodeInfoBean[] parsedNodeInfos = new NodeInfoBean[nodeInfos.size()];
+    int i = 0;
+    for (NodeInfo nodeInfo : nodeInfos) {
+      parsedNodeInfos[i] = NodeInfoBean.fromNodeInfo(nodeInfo);
+      ++i;
+    }
+    NodeInfoCollectionBean bean = new NodeInfoCollectionBean();
+    bean.setNodeInfo(parsedNodeInfos);
+    LOGGER.info("getRoutingTable() -> ok");
+    return Response.ok(bean).build();
+  }
 }

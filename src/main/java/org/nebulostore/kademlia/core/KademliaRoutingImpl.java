@@ -542,8 +542,7 @@ class KademliaRoutingImpl implements KademliaRouting {
 		for (NodeInfo nodeInfo: initialKnownPeers) {
 			if (!nodeInfo.getKey().equals(localKey_)) {
 				tempBuckets.get(getLocalKey().getDistanceBit(nodeInfo.getKey())).add(nodeInfo);
-			}/* Assign to Buckets */
-			
+			}
 		}
 		/* Randomize each bucket and put into real one */
 		for (int i = 0; i < Key.KEY_LENGTH; ++i) {

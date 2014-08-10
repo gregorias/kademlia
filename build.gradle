@@ -25,12 +25,27 @@ dependencies {
     testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
     testCompile project(':dfuntesting')
     runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
-    runtime group: 'com.owlike', name: 'genson', version: '0.+'
+    runtime group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.+'
+    testRuntime group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
+
 }
 
 task copyAllDependencies(type: Copy) {
     from configurations.runtime
     into 'allLibs'
+
+    from configurations.testRuntime
+    into 'allLibs'
+}
+
+task jarTest(type: Jar) {
+    from sourceSets.test.output
+    baseName += 'Test'
+}
+
+task buildAll {
+    dependsOn 'build'
+    dependsOn 'jarTest'
 }
 
 findbugs {

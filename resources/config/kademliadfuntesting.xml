@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kademliadfuntesting>
+    <environment-factory-class-name>
+        org.nebulostore.dfuntesting.LocalEnvironmentFactory
+    </environment-factory-class-name>
+    <environment-factory-config>
+        <environment-count>
+            11
+        </environment-count>
+        <dir-prefix>
+            kademlia
+        </dir-prefix>
+    </environment-factory-config>
+    <bucket-size>
+        2
+    </bucket-size>
+    <initial-kademlia-port>
+        9000
+    </initial-kademlia-port>
+    <initial-rest-port>
+        10000
+    </initial-rest-port>
+    <should-use-different-ports>
+        true
+    </should-use-different-ports>
+</kademliadfuntesting>

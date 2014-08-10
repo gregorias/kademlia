@@ -9,13 +9,12 @@ import java.util.Random;
  * Immutable 160 bit long Kademlia key.
  * 
  * @author Grzegorz Milka
- *
  */
 public class Key implements Serializable {
 	public static final int KEY_LENGTH = 160;
+	public static final int HEX = 16;
 	private static final long serialVersionUID = 1L;
 	private static final int BINARY = 2;
-	private static final int HEX = 16;
 	private final BitSet key_;
 	
 	public Key(BitSet key) {
@@ -23,7 +22,13 @@ public class Key implements Serializable {
 		key_ = (BitSet) key.clone();
 	}
 
-	public Key(int key) {
+	/**
+	 * Creates a key from integer in a little-endian bit fashion.
+	 *
+	 * @param key nonnegative number
+	 * @throws IllegalArgumentException
+	 */
+	public Key(int key) throws IllegalArgumentException {
 		if (key < 0) {
 			throw new IllegalArgumentException("Key should be a nonnegative number.");
 		}
@@ -36,6 +41,16 @@ public class Key implements Serializable {
 		}
 		key_ = bitSet;
 		assert key_.length() <= KEY_LENGTH;
+	}
+	
+	/**
+	 * Creates a key from a string representing hex number.
+	 *
+	 * @param key hexadecimal number in string
+	 * @throws IllegalArgumentException
+	 */
+	public Key(String key) {
+		this(Integer.parseInt(key, HEX));
 	}
 	
 	static Key newRandomKey(Random random) {
@@ -56,13 +71,16 @@ public class Key implements Serializable {
 	}
 	
 	/**
-	 * @return distance between two key in little-endian encoding.
+	 * @return distance {@link BitSet} between two keys in little-endian encoding.
 	 */
 	BitSet calculateDistance(Key otherKey) {
 		return xor(otherKey).key_;
 	}
 	
 	/**
+	 * Following assertion is true:
+	 *   assert (new Key(1)).getDistanceBit(new Key(2)) == 1
+	 *
 	 * @return most significant bit index of distance between this key and argument.
 	 */
 	int getDistanceBit(Key otherKey) {
@@ -106,9 +124,8 @@ public class Key implements Serializable {
 		result = prime * result + ((key_ == null) ? 0 : key_.hashCode());
 		return result;
 	}
-
-	@Override
-	public String toString() {
+	
+	public BigInteger toInt() {
 		StringBuilder strBuilder = new StringBuilder(KEY_LENGTH);
 		for (int i = KEY_LENGTH - 1; i >= 0; --i) {
 			if (key_.get(i)) {
@@ -118,8 +135,12 @@ public class Key implements Serializable {
 			}
 		}
 		BigInteger bigInteger = new BigInteger(strBuilder.toString(), BINARY);
+		return bigInteger;
+	}
 
-		return String.format("Key[key: %s]", bigInteger.toString(HEX));
+	@Override
+	public String toString() {
+		return toInt().toString(HEX);
 	}
 
 	Key xor(Key b) {

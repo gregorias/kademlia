@@ -1,13 +1,13 @@
 package org.nebulostore.kademlia.interfaces.rest;
 
 public final class NodeInfoCollectionBean {
-    private String[] nodeInfos_;
+    private NodeInfoBean[] nodeInfos_;
 
-    public String[] getNodeInfo() {
+    public NodeInfoBean[] getNodeInfo() {
         return nodeInfos_;
     }
 
-    public void setNodeInfo(String[] nodeInfos) {
+    public void setNodeInfo(NodeInfoBean[] nodeInfos) {
         nodeInfos_ = nodeInfos;
     }
 }

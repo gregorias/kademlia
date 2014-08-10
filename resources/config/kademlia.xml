@@ -1,21 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<kademlia>
-    <local-net-address>
-        localhost
-    </local-net-address>
-    <local-net-port>
-        1024
-    </local-net-port>
-    <local-key>
-        0
-    </local-key>
-    <bootstrap-net-address>
-        localhost
-    </bootstrap-net-address>
-    <bootstrap-net-port>
-        1024
-    </bootstrap-net-port>
-    <rest-port>
-        3000
-    </rest-port>
-</kademlia>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+<local-net-address>localhost</local-net-address>
+<local-net-port>9010</local-net-port>
+<local-key>10</local-key>
+<bucket-size>2</bucket-size>
+<bootstrap-key>0</bootstrap-key>
+<bootstrap-net-address>localhost</bootstrap-net-address>
+<bootstrap-net-port>9000</bootstrap-net-port>
+<rest-port>10010</rest-port>
+</configuration>

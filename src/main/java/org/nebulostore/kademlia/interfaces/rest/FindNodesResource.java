@@ -2,7 +2,7 @@ package org.nebulostore.kademlia.interfaces.rest;
 
 import java.util.Collection;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,7 +25,7 @@ public final class FindNodesResource {
 		kademlia_ = kademlia;
 	}
 	
-	@GET
+	@POST
 	@JSONP
 	@Produces(MediaType.APPLICATION_JSON) 
 	public NodeInfoCollectionBean findNodes(@PathParam("key") String paramKey) {
@@ -38,10 +38,10 @@ public final class FindNodesResource {
 			LOGGER.error(String.format("findNodes(%s)", key), e);
 			return null;
 		}
-        String[] parsedNodeInfos = new String[nodeInfos.size()];
+        NodeInfoBean[] parsedNodeInfos = new NodeInfoBean[nodeInfos.size()];
         int i = 0;
         for (NodeInfo nodeInfo: nodeInfos) {
-        	parsedNodeInfos[i] = nodeInfo.toString();
+        	parsedNodeInfos[i] = NodeInfoBean.fromNodeInfo(nodeInfo);
         	++i;
         }
         NodeInfoCollectionBean bean = new NodeInfoCollectionBean();

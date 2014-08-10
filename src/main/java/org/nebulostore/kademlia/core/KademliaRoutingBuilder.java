@@ -22,8 +22,9 @@ import org.slf4j.LoggerFactory;
  * Builder of Kademlia routing peers.
  * 
  * If you want multiple kademlia peers on the same listening connection you have
- * to: 1. Set {@link ByteListener} only once 2. Use the same builder for all
- * peers.
+ * to:
+ *  1. Set {@link ByteListener} only once.
+ *  2. Use the same builder for all peers.
  * 
  * This class is not thread safe.
  * 
@@ -32,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class KademliaRoutingBuilder {
 	private static final Logger LOGGER = LoggerFactory.getLogger(KademliaRoutingBuilder.class);
 	private final Random random_;
-	private static final int DEFAULT_ENTRY_REFRESH_DELAY = 60 * 60 * 1000;
+	private static final int DEFAULT_ENTRY_REFRESH_DELAY = 1000;
 	private static final int DEFAULT_K = 10;
 	private static final int DEFAULT_ALPHA = 5;
 
@@ -128,7 +129,7 @@ public class KademliaRoutingBuilder {
 	/**
 	 * Set delay used for periodic refreshing local node in the network.
 	 * 
-	 * @param delay delay in miliseconds
+	 * @param delay delay in milliseconds
 	 * @return this
 	 */
 	public KademliaRoutingBuilder setEntryRefreshingDelay(int delay) {
@@ -142,7 +143,7 @@ public class KademliaRoutingBuilder {
 	}
 
 	/**
-	 * Set initial peers connected to the network, but of unknown kademlia keys.
+	 * Set initial peers connected to the network, but of unknown Kademlia keys.
 	 * 
 	 * @param peerAddresses
 	 * @return this
@@ -154,7 +155,7 @@ public class KademliaRoutingBuilder {
 	}
 
 	/**
-	 * Set initial peers connected to the network with known kademlia keys.
+	 * Set initial peers connected to the network with known Kademlia keys.
 	 * 
 	 * @param peerInfos
 	 * @return this

@@ -47,7 +47,7 @@ public class NodeInfo implements Serializable {
 		}
 		return true;
 	}
-
+	
 	public Key getKey() {
 		return key_;
 	}
