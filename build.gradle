@@ -63,3 +63,8 @@ tasks.withType(FindBugs) {
         html.enabled = true
     }
 }
+
+/* Generate gradlew and gradle wrappers for portable gradle use */
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
