@@ -114,7 +114,7 @@ public class KademliaConsistencyCheckTestScript implements
         LOGGER.info("ConsistencyChecker.run() -> failure");
         return;
       }
-      
+
 
       --checkCount_;
       if (checkCount_ == 0) {
@@ -123,16 +123,16 @@ public class KademliaConsistencyCheckTestScript implements
 
       LOGGER.info("ConsistencyChecker.run() -> success");
     }
-    
+
     private void shutdown() {
     	scheduledExecutor_.shutdown();
-      
+
       synchronized (KademliaConsistencyCheckTestScript.this) {
         LOGGER.info("ConsistencyChecker.run(): Notifying that this is the last test.");
         isFinished_.set(true);
         KademliaConsistencyCheckTestScript.this.notifyAll();
       }
-      
+
     }
   }
 
@@ -140,26 +140,26 @@ public class KademliaConsistencyCheckTestScript implements
     private final Key startVert_;
     private final Collection<Key> reachableVerts_;
     private final Collection<Key> unreachableVerts_;
-    
-    public ConsistencyResult(Key startVert, Collection<Key> reachableVerts, 
+
+    public ConsistencyResult(Key startVert, Collection<Key> reachableVerts,
         Collection<Key> unreachableVerts) {
       startVert_ = startVert;
       reachableVerts_ = new LinkedList<>(reachableVerts);
       unreachableVerts_ = new LinkedList<>(unreachableVerts);
     }
-    
+
     public Collection<Key> getReachableVerts() {
       return reachableVerts_;
     }
-  
+
     public Key getStartVert() {
       return startVert_;
     }
-  
+
     public Collection<Key> getUnreachableVerts() {
       return unreachableVerts_;
     }
-    
+
     public Type getType() {
       if (getUnreachableVerts().size() == 0) {
         return Type.CONSISTENT;
@@ -167,7 +167,7 @@ public class KademliaConsistencyCheckTestScript implements
         return Type.INCONSISTENT;
       }
     }
-    
+
     public static enum Type {
       CONSISTENT,
       INCONSISTENT;
@@ -184,7 +184,7 @@ public class KademliaConsistencyCheckTestScript implements
     Key firstVert = graph.keySet().iterator().next();
     toVisit.add(firstVert);
     reachableVerts.add(firstVert);
-    
+
     while (!toVisit.isEmpty()) {
       Key curVert = toVisit.remove();
       for (Key vert: graph.get(curVert)) {
@@ -194,7 +194,7 @@ public class KademliaConsistencyCheckTestScript implements
         }
       }
     }
-    
+
     if (graph.size() == reachableVerts.size()) {
       return new ConsistencyResult(firstVert, reachableVerts, new LinkedList<Key>());
     } else {
@@ -203,7 +203,7 @@ public class KademliaConsistencyCheckTestScript implements
       return new ConsistencyResult(firstVert, reachableVerts, allVerts);
     }
   }
-  
+
   private static Map<Key, Collection<Key>> getConnectionGraph(Collection<KademliaApp> apps) throws IOException {
     LOGGER.trace("getConnectionGraph({})", apps.size());
     Map<Key, Collection<Key>> graph = new HashMap<>();
@@ -226,7 +226,7 @@ public class KademliaConsistencyCheckTestScript implements
     Collection<KademliaApp> startedApps = new LinkedList<>();
     for (KademliaApp app : apps) {
       try {
-        app.run();
+        app.startUp();
         startedApps.add(app);
       } catch (CommandException e) {
         LOGGER.error("runApps() -> Could not run kademlia application: {}",
@@ -234,7 +234,7 @@ public class KademliaConsistencyCheckTestScript implements
         for (KademliaApp startApp : startedApps) {
           try {
             startApp.shutDown();
-          } catch (KademliaException e1) {
+          } catch (IOException e1) {
             LOGGER.error(
                 "runApps() -> Could not shutdown kademlia application: {}.",
                 startApp.getName(), e);
@@ -258,7 +258,7 @@ public class KademliaConsistencyCheckTestScript implements
         for (KademliaApp appToStop : runApps) {
           try {
             appToStop.shutDown();
-          } catch (KademliaException e1) {
+          } catch (IOException e1) {
             LOGGER.error(
                 "startApps() -> Could not shutdown kademlia application: {}.",
                 appToStop.getName(), e);
@@ -284,7 +284,7 @@ public class KademliaConsistencyCheckTestScript implements
     for (KademliaApp app : apps) {
       try {
         app.shutDown();
-      } catch (KademliaException e) {
+      } catch (IOException e) {
         LOGGER.error("shutdownApps() -> Could not shutdown kademlia application: {}",
             app.getName(), e);
       }

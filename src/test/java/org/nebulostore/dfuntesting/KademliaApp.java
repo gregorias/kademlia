@@ -39,7 +39,6 @@ public class KademliaApp extends App {
     return p_ != null;
   }
 
-  @Override
   public boolean isWorking() {
     try {
       getRoutingTable();
@@ -47,19 +46,6 @@ public class KademliaApp extends App {
     } catch (IOException e) {
       return false;
     }
-  }
-
-  @Override
-  public synchronized void run() throws CommandException {
-    List<String> runCommand = new LinkedList<>();
-    runCommand.add("java");
-    runCommand.add("-Dorg.slf4j.simpleLogger.logFile=stderr.log");
-    runCommand.add("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace");
-    runCommand.add("-cp");
-    runCommand.add("allLibs/*:kademlia.jar");
-    runCommand.add("org.nebulostore.kademlia.interfaces.Main");
-    runCommand.add("kademlia.xml");
-    p_ = kademliaEnv_.runCommandAsynchronously(runCommand);
   }
 
   public Collection<NodeInfo> findNodes(Key key) throws IOException {
@@ -101,7 +87,7 @@ public class KademliaApp extends App {
     Client client = ClientBuilder.newClient();
     WebTarget target = client.target(uri_).path("get_routing_table");
 
-    NodeInfoCollectionBean beanColl; 
+    NodeInfoCollectionBean beanColl;
     try {
       beanColl = target.request(MediaType.APPLICATION_JSON_TYPE).get(NodeInfoCollectionBean.class);
     } catch (ProcessingException e) {
@@ -118,19 +104,32 @@ public class KademliaApp extends App {
   }
 
   @Override
-  public synchronized void shutDown() throws KademliaException {
+  public synchronized void startUp() throws CommandException {
+    List<String> runCommand = new LinkedList<>();
+    runCommand.add("java");
+    runCommand.add("-Dorg.slf4j.simpleLogger.logFile=stderr.log");
+    runCommand.add("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace");
+    runCommand.add("-cp");
+    runCommand.add("allLibs/*:kademlia.jar");
+    runCommand.add("org.nebulostore.kademlia.interfaces.Main");
+    runCommand.add("kademlia.xml");
+    p_ = kademliaEnv_.runCommandAsynchronously(runCommand);
+  }
+
+@Override
+  public synchronized void shutDown() throws IOException {
     if (!isRunning() || p_ == null) {
       throw new IllegalStateException("Kademlia is not running.");
     }
     Response response = sendRequest("shut_down", HTTPType.POST);
     if(!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
-      throw new KademliaException(String.format(
-          "Could not shut down kademlia interface: %s", response.toString()));
+      LOGGER.error("Could not shut down kademlia interface: {}", response.toString());
     }
     try {
       p_.waitFor();
     } catch (InterruptedException e) {
-      throw new KademliaException(e);
+      LOGGER.error("shutDown(): Received unexpected interrupt exception.", e);
+      Thread.currentThread().interrupt();
     }
   }
 
