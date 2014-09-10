@@ -1,16 +1,16 @@
 package org.nebulostore.kademlia.core;
 
 class FindNodeMessage extends MessageWithKnownRecipient {
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	private final Key key_;
+  private final Key mKey;
 
-	public FindNodeMessage(NodeInfo srcNodeInfo, NodeInfo destNodeInfo, Key searchedKey) {
-		super(srcNodeInfo, destNodeInfo);
-		key_ = searchedKey;
-	}
-	
-	public Key getSearchedKey() {
-		return key_;
-	}
+  public FindNodeMessage(NodeInfo srcNodeInfo, NodeInfo destNodeInfo, Key searchedKey) {
+    super(srcNodeInfo, destNodeInfo);
+    mKey = searchedKey;
+  }
+
+  public Key getSearchedKey() {
+    return mKey;
+  }
 }

@@ -10,17 +10,17 @@ import org.nebulostore.kademlia.core.KademliaRouting;
 
 @Path("start")
 public final class KademliaStartResource {
-  private final KademliaRouting kademlia_;
+  private final KademliaRouting mKademlia;
 
   public KademliaStartResource(KademliaRouting kademlia) {
-    kademlia_ = kademlia;
+    mKademlia = kademlia;
   }
 
   @POST
   @Produces(MediaType.TEXT_PLAIN)
   public Response stop() {
     try {
-      kademlia_.start();
+      mKademlia.start();
     } catch (Exception e) {
       return Response.status(Response.Status.BAD_REQUEST).
           entity(String.format("Could not start up kademlia: %s.", e)).build();

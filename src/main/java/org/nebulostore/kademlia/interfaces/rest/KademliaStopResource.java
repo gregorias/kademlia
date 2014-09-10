@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 public final class KademliaStopResource {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(KademliaStopResource.class);
-  private final KademliaRouting kademlia_;
+  private final KademliaRouting mKademlia;
 
   public KademliaStopResource(KademliaRouting kademlia) {
-    kademlia_ = kademlia;
+    mKademlia = kademlia;
   }
 
   @POST
@@ -25,7 +25,7 @@ public final class KademliaStopResource {
   public Response stop() {
     LOGGER.info("stop()");
     try {
-      kademlia_.stop();
+      mKademlia.stop();
     } catch (Exception e) {
       LOGGER.info("stop() -> bad request");
       return Response.status(Response.Status.BAD_REQUEST)

@@ -24,19 +24,19 @@ import org.slf4j.LoggerFactory;
 
 public class KademliaApp extends App {
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaApp.class);
-  private final Environment kademliaEnv_;
-  private final URI uri_;
-  private Process p_;
+  private final Environment mKademliaEnv;
+  private final URI mUri;
+  private Process mProcess;
 
   public KademliaApp(int id, String name, URI uri, Environment env) {
     super(id, name);
-    uri_ = uri;
-    kademliaEnv_ = env;
+    mUri = uri;
+    mKademliaEnv = env;
   }
 
   @Override
   public synchronized boolean isRunning() {
-    return p_ != null;
+    return mProcess != null;
   }
 
   public boolean isWorking() {
@@ -50,7 +50,7 @@ public class KademliaApp extends App {
 
   public Collection<NodeInfo> findNodes(Key key) throws IOException {
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(uri_).path("find_nodes/" + key.toInt().toString(Key.HEX));
+    WebTarget target = client.target(mUri).path("find_nodes/" + key.toInt().toString(Key.HEX));
 
     NodeInfoCollectionBean beanColl;
     try {
@@ -60,7 +60,7 @@ public class KademliaApp extends App {
     }
     NodeInfoBean[] beans = beanColl.getNodeInfo();
     Collection<NodeInfo> infos = new LinkedList<>();
-    for (NodeInfoBean bean: beans) {
+    for (NodeInfoBean bean : beans) {
       infos.add(bean.toNodeInfo());
     }
     return infos;
@@ -69,7 +69,7 @@ public class KademliaApp extends App {
   public Key getKey() throws IOException {
     LOGGER.debug("getKey()");
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(uri_).path("get_key");
+    WebTarget target = client.target(mUri).path("get_key");
 
     String keyStr;
     try {
@@ -85,7 +85,7 @@ public class KademliaApp extends App {
   public Collection<NodeInfo> getRoutingTable() throws IOException {
     LOGGER.debug("getRoutingTable()");
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(uri_).path("get_routing_table");
+    WebTarget target = client.target(mUri).path("get_routing_table");
 
     NodeInfoCollectionBean beanColl;
     try {
@@ -96,7 +96,7 @@ public class KademliaApp extends App {
     }
     NodeInfoBean[] beans = beanColl.getNodeInfo();
     Collection<NodeInfo> infos = new LinkedList<>();
-    for (NodeInfoBean bean: beans) {
+    for (NodeInfoBean bean : beans) {
       infos.add(bean.toNodeInfo());
     }
     LOGGER.debug("getRoutingTable() -> returning with infos.");
@@ -113,20 +113,20 @@ public class KademliaApp extends App {
     runCommand.add("allLibs/*:kademlia.jar");
     runCommand.add("org.nebulostore.kademlia.interfaces.Main");
     runCommand.add("kademlia.xml");
-    p_ = kademliaEnv_.runCommandAsynchronously(runCommand);
+    mProcess = mKademliaEnv.runCommandAsynchronously(runCommand);
   }
 
-@Override
+  @Override
   public synchronized void shutDown() throws IOException {
-    if (!isRunning() || p_ == null) {
+    if (!isRunning() || mProcess == null) {
       throw new IllegalStateException("Kademlia is not running.");
     }
     Response response = sendRequest("shut_down", HTTPType.POST);
-    if(!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+    if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
       LOGGER.error("Could not shut down kademlia interface: {}", response.toString());
     }
     try {
-      p_.waitFor();
+      mProcess.waitFor();
     } catch (InterruptedException e) {
       LOGGER.error("shutDown(): Received unexpected interrupt exception.", e);
       Thread.currentThread().interrupt();
@@ -134,19 +134,19 @@ public class KademliaApp extends App {
   }
 
   public void start() throws IOException, KademliaException {
-    LOGGER.debug("[{} {}] start()", getId(), uri_);
+    LOGGER.debug("[{} {}] start()", getId(), mUri);
     Response response;
     try {
       response = sendRequest("start", HTTPType.POST);
     } catch (ProcessingException e) {
       LOGGER.error("[{}] start() -> POST /start has failed.", e);
-      throw new IOException("Could not start kademlia." , e);
+      throw new IOException("Could not start kademlia.", e);
     }
 
-    if(!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+    if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
       LOGGER.error("[{}] start() -> POST /start has failed.");
-      throw new KademliaException(String.format(
-          "Could not start kademlia: %s", response.toString()));
+      throw new KademliaException(
+          String.format("Could not start kademlia: %s", response.toString()));
     }
   }
 
@@ -155,23 +155,22 @@ public class KademliaApp extends App {
     try {
       response = sendRequest("stop", HTTPType.POST);
     } catch (ProcessingException e) {
-      throw new IOException("Could not stop kademlia." , e);
+      throw new IOException("Could not stop kademlia.", e);
     }
 
-    if(!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
-      throw new KademliaException(String.format(
-          "Could not stop kademlia: %s", response.toString()));
+    if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+      throw new KademliaException(String.format("Could not stop kademlia: %s",
+          response.toString()));
     }
   }
 
   private enum HTTPType {
-    GET,
-    POST
+    GET, POST
   }
 
   private Response sendRequest(String path, HTTPType type) {
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(uri_).path(path);
+    WebTarget target = client.target(mUri).path(path);
 
     Response response;
     if (type == HTTPType.GET) {

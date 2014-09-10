@@ -9,15 +9,15 @@ import org.nebulostore.kademlia.core.KademliaRouting;
 
 @Path("get_key")
 public final class GetLocalKeyResource {
-	private final KademliaRouting kademlia_;
-	
-	public GetLocalKeyResource(KademliaRouting kademlia) {
-		kademlia_ = kademlia;
-	}
-	
-	@GET
-	@Produces(MediaType.TEXT_PLAIN) 
-	public String getKey() {
-		return kademlia_.getLocalKey().toString();
-	}
+  private final KademliaRouting mKademlia;
+
+  public GetLocalKeyResource(KademliaRouting kademlia) {
+    mKademlia = kademlia;
+  }
+
+  @GET
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getKey() {
+    return mKademlia.getLocalKey().toString();
+  }
 }

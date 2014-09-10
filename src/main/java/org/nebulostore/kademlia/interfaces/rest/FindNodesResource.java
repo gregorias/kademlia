@@ -18,34 +18,34 @@ import org.slf4j.LoggerFactory;
 
 @Path("find_nodes/{key}")
 public final class FindNodesResource {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FindNodesResource.class);
-	private final KademliaRouting kademlia_;
-	
-	public FindNodesResource(KademliaRouting kademlia) {
-		kademlia_ = kademlia;
-	}
-	
-	@POST
-	@JSONP
-	@Produces(MediaType.APPLICATION_JSON) 
-	public NodeInfoCollectionBean findNodes(@PathParam("key") String paramKey) {
-		LOGGER.info("findNodes({})", paramKey);
-		Key key = new Key(Integer.parseInt(paramKey));
-        Collection<NodeInfo> nodeInfos = null;
-        try {
-			nodeInfos = kademlia_.findClosestNodes(key);
-		} catch (InterruptedException | KademliaException e) {
-			LOGGER.error(String.format("findNodes(%s)", key), e);
-			return null;
-		}
-        NodeInfoBean[] parsedNodeInfos = new NodeInfoBean[nodeInfos.size()];
-        int i = 0;
-        for (NodeInfo nodeInfo: nodeInfos) {
-        	parsedNodeInfos[i] = NodeInfoBean.fromNodeInfo(nodeInfo);
-        	++i;
-        }
-        NodeInfoCollectionBean bean = new NodeInfoCollectionBean();
-        bean.setNodeInfo(parsedNodeInfos);
-        return bean;
-	}
+  private static final Logger LOGGER = LoggerFactory.getLogger(FindNodesResource.class);
+  private final KademliaRouting mKademlia;
+
+  public FindNodesResource(KademliaRouting kademlia) {
+    mKademlia = kademlia;
+  }
+
+  @POST
+  @JSONP
+  @Produces(MediaType.APPLICATION_JSON)
+  public NodeInfoCollectionBean findNodes(@PathParam("key") String paramKey) {
+    LOGGER.info("findNodes({})", paramKey);
+    Key key = new Key(Integer.parseInt(paramKey));
+    Collection<NodeInfo> nodeInfos = null;
+    try {
+      nodeInfos = mKademlia.findClosestNodes(key);
+    } catch (InterruptedException | KademliaException e) {
+      LOGGER.error(String.format("findNodes(%s)", key), e);
+      return null;
+    }
+    NodeInfoBean[] parsedNodeInfos = new NodeInfoBean[nodeInfos.size()];
+    int idx = 0;
+    for (NodeInfo nodeInfo : nodeInfos) {
+      parsedNodeInfos[idx] = NodeInfoBean.fromNodeInfo(nodeInfo);
+      ++idx;
+    }
+    NodeInfoCollectionBean bean = new NodeInfoCollectionBean();
+    bean.setNodeInfo(parsedNodeInfos);
+    return bean;
+  }
 }

@@ -16,59 +16,59 @@ import org.slf4j.LoggerFactory;
 
 /**
  * REST interface for kademlia.
- * 
+ *
  * @author Grzegorz Milka
  */
 public class RESTApp {
-	private static final Logger LOGGER = LoggerFactory.getLogger(RESTApp.class);
-	private final KademliaRouting kademlia_;
-	private final URI uri_;
-	private final Lock lock_;
-	private final Condition shutDownCondition_;
-	private final AtomicBoolean hasShutDownBeenCalled_;
+  private static final Logger LOGGER = LoggerFactory.getLogger(RESTApp.class);
+  private final KademliaRouting mKademlia;
+  private final URI mUri;
+  private final Lock mLock;
+  private final Condition mShutDownCondition;
+  private final AtomicBoolean mHasShutDownBeenCalled;
 
-	public RESTApp(KademliaRouting kademlia, URI uri) {
-		kademlia_ = kademlia;
-		uri_ = uri;
-		lock_ = new ReentrantLock();
-		shutDownCondition_ = lock_.newCondition();
-		hasShutDownBeenCalled_ = new AtomicBoolean(false);
-	}
-	
-	public void run() {
-		LOGGER.info("run()");
-		ResourceConfig config = createConfig();
-    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri_, config);
+  public RESTApp(KademliaRouting kademlia, URI uri) {
+    mKademlia = kademlia;
+    mUri = uri;
+    mLock = new ReentrantLock();
+    mShutDownCondition = mLock.newCondition();
+    mHasShutDownBeenCalled = new AtomicBoolean(false);
+  }
+
+  public void run() {
+    LOGGER.info("run()");
+    ResourceConfig config = createConfig();
+    final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(mUri, config);
     try {
-			server.start();
-			lock_.lock();
-			try {
-				while (!hasShutDownBeenCalled_.get()) {
-					shutDownCondition_.await();
-				}
-		    server.shutdown();
-			} catch (InterruptedException e) {
-				server.shutdownNow();
-				LOGGER.error("run() -> Unexpected exception.", e);
-				return;
-			} finally {
-				lock_.unlock();
-			}
-		} catch (IOException e) {
-			LOGGER.error("run() -> IOException .", e);
-		}
-        LOGGER.info("run(): void");
-	}
-	
-	private ResourceConfig createConfig() {
-		ResourceConfig config = new ResourceConfig();
-		config.register(new KademliaStartResource(kademlia_));
-		config.register(new GetLocalKeyResource(kademlia_));
-		config.register(new FindNodesResource(kademlia_));
-		config.register(new KademliaGetRoutingTableResource(kademlia_));
-		config.register(new KademliaStopResource(kademlia_));
-		config.register(new ServerShutDownResource(lock_, shutDownCondition_, hasShutDownBeenCalled_));
-		return config;
-	}
+      server.start();
+      mLock.lock();
+      try {
+        while (!mHasShutDownBeenCalled.get()) {
+          mShutDownCondition.await();
+        }
+        server.shutdown();
+      } catch (InterruptedException e) {
+        server.shutdownNow();
+        LOGGER.error("run() -> Unexpected exception.", e);
+        return;
+      } finally {
+        mLock.unlock();
+      }
+    } catch (IOException e) {
+      LOGGER.error("run() -> IOException .", e);
+    }
+    LOGGER.info("run(): void");
+  }
+
+  private ResourceConfig createConfig() {
+    ResourceConfig config = new ResourceConfig();
+    config.register(new KademliaStartResource(mKademlia));
+    config.register(new GetLocalKeyResource(mKademlia));
+    config.register(new FindNodesResource(mKademlia));
+    config.register(new KademliaGetRoutingTableResource(mKademlia));
+    config.register(new KademliaStopResource(mKademlia));
+    config.register(new ServerShutDownResource(mLock, mShutDownCondition, mHasShutDownBeenCalled));
+    return config;
+  }
 
 }

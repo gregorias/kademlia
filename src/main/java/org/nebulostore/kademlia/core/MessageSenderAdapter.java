@@ -10,56 +10,56 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Adapter from {@link ByteSender} to {@link MessageSender}.
- * 
+ *
  * @author Grzegorz Milka
  */
 class MessageSenderAdapter implements MessageSender {
-	private static final Logger LOGGER = LoggerFactory.getLogger(MessageSenderAdapter.class);
-	private ByteSender byteSender_;
-	
-	public MessageSenderAdapter(ByteSender byteSender) {
-		byteSender_ = byteSender;
-	}
+  private static final Logger LOGGER = LoggerFactory.getLogger(MessageSenderAdapter.class);
+  private ByteSender mByteSender;
 
-	@Override
-	public void sendMessageWithReply(InetSocketAddress dest, Message msg,
-			MessageResponseHandler handler) {
-		LOGGER.debug("sendMessageWithReply({}, {}, {})", dest, msg, handler);
-		byte[] array = MessageSerializer.translateFromMessageToByte(msg);
-		byteSender_.sendMessageWithReply(dest, array, new ByteResponseHandlerAdapter(handler));
-	}
-	
-	private static class ByteResponseHandlerAdapter implements ByteResponseHandler {
-		private final MessageResponseHandler handler_;
+  public MessageSenderAdapter(ByteSender byteSender) {
+    mByteSender = byteSender;
+  }
 
-		public ByteResponseHandlerAdapter(MessageResponseHandler handler) {
-			handler_ = handler;
-		}
+  @Override
+  public void sendMessageWithReply(InetSocketAddress dest, Message msg,
+      MessageResponseHandler handler) {
+    LOGGER.debug("sendMessageWithReply({}, {}, {})", dest, msg, handler);
+    byte[] array = MessageSerializer.translateFromMessageToByte(msg);
+    mByteSender.sendMessageWithReply(dest, array, new ByteResponseHandlerAdapter(handler));
+  }
 
-		@Override
-		public void onResponse(byte[] response) {
-			Message message = MessageSerializer.translateFromByteToMessage(response);
-			if (message == null) {
-				handler_.onResponseError(new IOException(
-						"Could not deserialize response to correct message."));
-			} else {
-				handler_.onResponse(message);
-			}
-		}
+  private static class ByteResponseHandlerAdapter implements ByteResponseHandler {
+    private final MessageResponseHandler mHandler;
 
-		@Override
-		public void onResponseError(IOException e) {
-			handler_.onResponseError(e);
-		}
+    public ByteResponseHandlerAdapter(MessageResponseHandler handler) {
+      mHandler = handler;
+    }
 
-		@Override
-		public void onSendSuccessful() {
-			handler_.onSendSuccessful();
-		}
+    @Override
+    public void onResponse(byte[] response) {
+      Message message = MessageSerializer.translateFromByteToMessage(response);
+      if (message == null) {
+        mHandler.onResponseError(new IOException(
+            "Could not deserialize response to correct message."));
+      } else {
+        mHandler.onResponse(message);
+      }
+    }
 
-		@Override
-		public void onSendError(IOException e) {
-			handler_.onSendError(e);
-		}
-	}
+    @Override
+    public void onResponseError(IOException exception) {
+      mHandler.onResponseError(exception);
+    }
+
+    @Override
+    public void onSendSuccessful() {
+      mHandler.onSendSuccessful();
+    }
+
+    @Override
+    public void onSendError(IOException exception) {
+      mHandler.onSendError(exception);
+    }
+  }
 }

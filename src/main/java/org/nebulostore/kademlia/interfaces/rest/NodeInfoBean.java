@@ -6,44 +6,44 @@ import org.nebulostore.kademlia.core.Key;
 import org.nebulostore.kademlia.core.NodeInfo;
 
 public final class NodeInfoBean {
-    private String key_;
-    private String inetAddress_;
-    private int port_;
-    
-    public static NodeInfoBean fromNodeInfo(NodeInfo info) {
-    	NodeInfoBean bean = new NodeInfoBean();
-    	bean.setKey(info.getKey().toInt().toString(Key.HEX));
-    	bean.setInetAddress(info.getSocketAddress().getHostName());
-    	bean.setPort(info.getSocketAddress().getPort());
-    	return bean;
-    }
+  private String mKey;
+  private String mInetAddress;
+  private int mPort;
 
-	public String getInetAddress() {
-		return inetAddress_;
-	}
+  public static NodeInfoBean fromNodeInfo(NodeInfo info) {
+    NodeInfoBean bean = new NodeInfoBean();
+    bean.setKey(info.getKey().toInt().toString(Key.HEX));
+    bean.setInetAddress(info.getSocketAddress().getHostName());
+    bean.setPort(info.getSocketAddress().getPort());
+    return bean;
+  }
 
-	public String getKey() {
-		return key_;
-	}
+  public String getInetAddress() {
+    return mInetAddress;
+  }
 
-	public int getPort() {
-		return port_;
-	}
+  public String getKey() {
+    return mKey;
+  }
 
-	public void setInetAddress(String inetAddress) {
-		inetAddress_ = inetAddress;
-	}
+  public int getPort() {
+    return mPort;
+  }
 
-	public void setKey(String key) {
-		key_ = key;
-	}
+  public void setInetAddress(String inetAddress) {
+    mInetAddress = inetAddress;
+  }
 
-	public void setPort(int port) {
-		port_ = port;
-	}
+  public void setKey(String key) {
+    mKey = key;
+  }
 
-    public NodeInfo toNodeInfo() {
-    	return new NodeInfo(new Key(key_), new InetSocketAddress(inetAddress_, port_));
-    }
-    
+  public void setPort(int port) {
+    mPort = port;
+  }
+
+  public NodeInfo toNodeInfo() {
+    return new NodeInfo(new Key(mKey), new InetSocketAddress(mInetAddress, mPort));
+  }
+
 }

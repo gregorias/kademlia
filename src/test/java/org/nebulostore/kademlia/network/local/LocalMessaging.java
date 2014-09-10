@@ -17,98 +17,97 @@ import org.nebulostore.kademlia.network.UserGivenNetworkAddressDiscovery;
 
 /**
  * Implementation of local messaging system.
- * 
+ *
  * @author Grzegorz Milka
  */
 public class LocalMessaging {
-	private final ByteSender byteSender_;
-	private final ReadWriteLock rwLock_;
-	private final Lock readLock_;
-	private final Lock writeLock_;
-	private final Map<Integer, ByteListener> portToListenerMap_;
+  private final ByteSender mByteSender;
+  private final ReadWriteLock mRWLock;
+  private final Lock mReadLock;
+  private final Lock mWriteLock;
+  private final Map<Integer, ByteListener> mPortToListenerMap;
 
-	public LocalMessaging() {
-		byteSender_ = new ByteSenderImpl();
-		rwLock_ = new ReentrantReadWriteLock();
-		readLock_ = rwLock_.readLock();
-		writeLock_ = rwLock_.writeLock();
-		portToListenerMap_ = new HashMap<Integer, ByteListener>();
-	}
-	
-	public ByteListeningService getByteListeningService(int port) {
-		return new ByteListeningServiceImpl(port);
-	}
-	
-	public ByteSender getByteSender() {
-		return byteSender_;
-	}
-	
-	public NetworkAddressDiscovery getNetworkAddressDiscovery(int port) {
-		return new UserGivenNetworkAddressDiscovery(new InetSocketAddress(port));
-	}
+  public LocalMessaging() {
+    mByteSender = new ByteSenderImpl();
+    mRWLock = new ReentrantReadWriteLock();
+    mReadLock = mRWLock.readLock();
+    mWriteLock = mRWLock.writeLock();
+    mPortToListenerMap = new HashMap<Integer, ByteListener>();
+  }
 
-	private class ByteListeningServiceImpl implements ByteListeningService {
-		private final int port_;
-		
-		public ByteListeningServiceImpl(int port) {
-			port_ = port;
-		}
+  public ByteListeningService getByteListeningService(int port) {
+    return new ByteListeningServiceImpl(port);
+  }
 
-		@Override
-		public void registerListener(ByteListener listener) {
-			writeLock_.lock();
-			try {
-				if (portToListenerMap_.containsKey(port_)) {
-					throw new IllegalStateException(String.format("Port: %d already has a listener",
-							port_));
-				}
-				portToListenerMap_.put(port_, listener);
-			} finally {
-				writeLock_.unlock();
-			}
-		}
+  public ByteSender getByteSender() {
+    return mByteSender;
+  }
 
-		@Override
-		public void unregisterListener(ByteListener listener) {
-			writeLock_.lock();
-			try {
-				ByteListener byteListener = portToListenerMap_.get(port_);
-				if (byteListener == null) {
-					throw new IllegalStateException(String.format("Port: %d has no listener", port_));
-				} else if (byteListener != listener) {
-					throw new IllegalStateException("Given listener hasn't been registered.");
-				}
-				portToListenerMap_.remove(port_);
-			} finally {
-				writeLock_.unlock();
-			}
-		}
-	}
-	
-	private class ByteSenderImpl implements ByteSender {
-		@Override
-		public void sendMessageWithReply(InetSocketAddress dest, byte[] array,
-				ByteResponseHandler handler) {
-			byte[] response;
-			readLock_.lock();
-			try {
-				ByteListener byteListener = portToListenerMap_.get(dest.getPort());
-				if (byteListener == null) {
-					handler.onSendError(new IOException(String.format("ByteListener to port: %d hasn't"
-							+ " been registered.", dest.getPort())));
-					return;
-				} else {
-					response = byteListener.receiveByteArrayWithResponse(array);
-				}
-			} finally {
-				readLock_.unlock();
-			}
-			handler.onSendSuccessful();
-			if (response != null) {
-				handler.onResponse(response);
-			} else {
-				handler.onResponseError(new IOException("Received null response"));
-			}
-		}
-	}
+  public NetworkAddressDiscovery getNetworkAddressDiscovery(int port) {
+    return new UserGivenNetworkAddressDiscovery(new InetSocketAddress(port));
+  }
+
+  private class ByteListeningServiceImpl implements ByteListeningService {
+    private final int mPort;
+
+    public ByteListeningServiceImpl(int port) {
+      mPort = port;
+    }
+
+    @Override
+    public void registerListener(ByteListener listener) {
+      mWriteLock.lock();
+      try {
+        if (mPortToListenerMap.containsKey(mPort)) {
+          throw new IllegalStateException(String.format("Port: %d already has a listener", mPort));
+        }
+        mPortToListenerMap.put(mPort, listener);
+      } finally {
+        mWriteLock.unlock();
+      }
+    }
+
+    @Override
+    public void unregisterListener(ByteListener listener) {
+      mWriteLock.lock();
+      try {
+        ByteListener byteListener = mPortToListenerMap.get(mPort);
+        if (byteListener == null) {
+          throw new IllegalStateException(String.format("Port: %d has no listener", mPort));
+        } else if (byteListener != listener) {
+          throw new IllegalStateException("Given listener hasn't been registered.");
+        }
+        mPortToListenerMap.remove(mPort);
+      } finally {
+        mWriteLock.unlock();
+      }
+    }
+  }
+
+  private class ByteSenderImpl implements ByteSender {
+    @Override
+    public void sendMessageWithReply(InetSocketAddress dest, byte[] array,
+        ByteResponseHandler handler) {
+      byte[] response;
+      mReadLock.lock();
+      try {
+        ByteListener byteListener = mPortToListenerMap.get(dest.getPort());
+        if (byteListener == null) {
+          handler.onSendError(new IOException(String.format("ByteListener to port: %d hasn't"
+              + " been registered.", dest.getPort())));
+          return;
+        } else {
+          response = byteListener.receiveByteArrayWithResponse(array);
+        }
+      } finally {
+        mReadLock.unlock();
+      }
+      handler.onSendSuccessful();
+      if (response != null) {
+        handler.onResponse(response);
+      } else {
+        handler.onResponseError(new IOException("Received null response"));
+      }
+    }
+  }
 }

@@ -4,12 +4,15 @@ import java.io.IOException;
 
 /**
  * Interface for observers of byte array send related events.
- * 
+ *
  * @author Grzegorz Milka
  */
 public interface ByteResponseHandler {
-	void onResponse(byte[] response);
-	void onResponseError(IOException e);
-	void onSendSuccessful();
-	void onSendError(IOException e);
+  void onResponse(byte[] response);
+
+  void onResponseError(IOException exception);
+
+  void onSendSuccessful();
+
+  void onSendError(IOException exception);
 }

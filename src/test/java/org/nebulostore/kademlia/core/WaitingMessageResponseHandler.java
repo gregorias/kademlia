@@ -2,52 +2,50 @@ package org.nebulostore.kademlia.core;
 
 import java.io.IOException;
 
-final class WaitingMessageResponseHandler implements
-		MessageResponseHandler {
-	private Boolean hasFinished_;
-	private IOException ioException_;
-	
-	public WaitingMessageResponseHandler() {
-		hasFinished_ = false;
-	}
+final class WaitingMessageResponseHandler implements MessageResponseHandler {
+  private Boolean mHasFinished;
+  private IOException mIoException;
 
+  public WaitingMessageResponseHandler() {
+    mHasFinished = false;
+  }
 
-	@Override
-	public synchronized void onResponse(Message response) {
-		finish();
-	}
+  @Override
+  public synchronized void onResponse(Message response) {
+    finish();
+  }
 
-	@Override
-	public synchronized void onResponseError(IOException e) {
-		ioException_ = e;
-		finish();
-	}
+  @Override
+  public synchronized void onResponseError(IOException exception) {
+    mIoException = exception;
+    finish();
+  }
 
-	@Override
-	public void onSendSuccessful() {
-	}
+  @Override
+  public void onSendSuccessful() {
+  }
 
-	@Override
-	public synchronized void onSendError(IOException e) {
-		ioException_ = e;
-		finish();
-	}
-	
-	public synchronized void waitForResponse() throws InterruptedException, IOException {
-		while (!hasFinished_) {
-			this.wait();
-		}
+  @Override
+  public synchronized void onSendError(IOException exception) {
+    mIoException = exception;
+    finish();
+  }
 
-		if (ioException_ != null) {
-			throw ioException_;
-		}
+  public synchronized void waitForResponse() throws InterruptedException, IOException {
+    while (!mHasFinished) {
+      this.wait();
+    }
 
-		this.notifyAll();
-	}
-	
-	private synchronized void finish() {
-		hasFinished_ = true;
-		this.notifyAll();
-	}
+    if (mIoException != null) {
+      throw mIoException;
+    }
+
+    this.notifyAll();
+  }
+
+  private synchronized void finish() {
+    mHasFinished = true;
+    this.notifyAll();
+  }
 
 }

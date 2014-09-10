@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory;
 public final class KademliaGetRoutingTableResource {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(KademliaGetRoutingTableResource.class);
-  private final KademliaRouting kademlia_;
+  private final KademliaRouting mKademlia;
 
   public KademliaGetRoutingTableResource(KademliaRouting kademlia) {
-    kademlia_ = kademlia;
+    mKademlia = kademlia;
   }
 
   @GET
@@ -31,21 +31,17 @@ public final class KademliaGetRoutingTableResource {
     LOGGER.info("getRoutingTable()");
     Collection<NodeInfo> nodeInfos;
     try {
-      nodeInfos = kademlia_.getRoutingTable();
+      nodeInfos = mKademlia.getRoutingTable();
     } catch (Exception e) {
       LOGGER.info("getRoutingTable() -> bad request");
-      return Response
-          .status(Response.Status.BAD_REQUEST)
-          .entity(
-              String
-                  .format("Could not get routing table from kademlia: %s.", e))
-          .build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(String.format("Could not get routing table from kademlia: %s.", e)).build();
     }
     NodeInfoBean[] parsedNodeInfos = new NodeInfoBean[nodeInfos.size()];
-    int i = 0;
+    int idx = 0;
     for (NodeInfo nodeInfo : nodeInfos) {
-      parsedNodeInfos[i] = NodeInfoBean.fromNodeInfo(nodeInfo);
-      ++i;
+      parsedNodeInfos[idx] = NodeInfoBean.fromNodeInfo(nodeInfo);
+      ++idx;
     }
     NodeInfoCollectionBean bean = new NodeInfoCollectionBean();
     bean.setNodeInfo(parsedNodeInfos);
