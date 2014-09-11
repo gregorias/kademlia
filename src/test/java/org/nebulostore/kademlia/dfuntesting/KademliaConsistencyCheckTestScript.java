@@ -1,4 +1,4 @@
-package org.nebulostore.dfuntesting;
+package org.nebulostore.kademlia.dfuntesting;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -12,6 +12,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.nebulostore.dfuntesting.CommandException;
+import org.nebulostore.dfuntesting.TestResult;
+import org.nebulostore.dfuntesting.TestScript;
 import org.nebulostore.dfuntesting.TestResult.Type;
 import org.nebulostore.kademlia.core.KademliaException;
 import org.nebulostore.kademlia.core.Key;

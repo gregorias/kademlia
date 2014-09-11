@@ -1,4 +1,4 @@
-package org.nebulostore.dfuntesting;
+package org.nebulostore.kademlia.dfuntesting;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +14,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 
+import org.nebulostore.dfuntesting.App;
+import org.nebulostore.dfuntesting.CommandException;
+import org.nebulostore.dfuntesting.Environment;
 import org.nebulostore.kademlia.core.KademliaException;
 import org.nebulostore.kademlia.core.Key;
 import org.nebulostore.kademlia.core.NodeInfo;

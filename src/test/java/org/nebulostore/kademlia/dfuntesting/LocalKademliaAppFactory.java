@@ -1,8 +1,10 @@
-package org.nebulostore.dfuntesting;
+package org.nebulostore.kademlia.dfuntesting;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.nebulostore.dfuntesting.ApplicationFactory;
+import org.nebulostore.dfuntesting.Environment;
 import org.nebulostore.kademlia.interfaces.Main;
 
 public class LocalKademliaAppFactory implements ApplicationFactory<KademliaApp> {

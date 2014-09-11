@@ -1,4 +1,4 @@
-package org.nebulostore.dfuntesting;
+package org.nebulostore.kademlia.dfuntesting;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +9,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.nebulostore.dfuntesting.EnvironmentFactory;
+import org.nebulostore.dfuntesting.SingleTestRunner;
+import org.nebulostore.dfuntesting.TestResult;
 import org.nebulostore.dfuntesting.TestResult.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

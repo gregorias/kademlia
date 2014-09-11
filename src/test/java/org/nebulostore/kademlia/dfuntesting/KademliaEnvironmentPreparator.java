@@ -1,4 +1,4 @@
-package org.nebulostore.dfuntesting;
+package org.nebulostore.kademlia.dfuntesting;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.nebulostore.dfuntesting.Environment;
+import org.nebulostore.dfuntesting.EnvironmentPreparator;
 import org.nebulostore.kademlia.interfaces.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
