@@ -10,6 +10,11 @@ import org.nebulostore.kademlia.core.KademliaRouting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Stop this kademlia peer.
+ *
+ * @author Grzegorz Milka
+ */
 @Path("stop")
 public final class KademliaStopResource {
   private static final Logger LOGGER = LoggerFactory

@@ -13,6 +13,11 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Shut down entire REST application.
+ *
+ * @author Grzegorz Milka
+ */
 @Path("shut_down")
 public final class ServerShutDownResource {
   private static final Logger LOGGER = LoggerFactory.getLogger(ServerShutDownResource.class);

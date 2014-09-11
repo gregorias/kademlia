@@ -9,7 +9,7 @@ import java.util.Collection;
  */
 public interface KademliaRouting {
   /**
-   * findClosestNodes with size equal to k parameter.
+   * findClosestNodes with size equal to bucket size parameter.
    *
    * @see KademliaRouting#findClosestNodes
    */
@@ -45,16 +45,16 @@ public interface KademliaRouting {
   boolean isRunning();
 
   /**
-   * Disconnects peer from network.
-   *
-   * @throws KademliaException
-   */
-  void stop() throws KademliaException;
-
-  /**
    * Connect and initialize this peer.
    *
    * @throws KademliaException
    */
   void start() throws KademliaException;
+
+  /**
+   * Disconnects peer from network.
+   *
+   * @throws KademliaException
+   */
+  void stop() throws KademliaException;
 }

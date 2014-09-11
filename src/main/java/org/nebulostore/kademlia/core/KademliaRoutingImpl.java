@@ -46,13 +46,13 @@ class KademliaRoutingImpl implements KademliaRouting {
   private final Collection<InetSocketAddress> mInitialPeerAddresses;
   private final Collection<NodeInfo> mInitialKnownPeers;
 
-  private final List<List<NodeInfo>> mKBuckets;
+  private final List<List<NodeInfo>> mBuckets;
 
   /**
    * List of nodes expecting to be put into a bucket if a place for them is
    * emptied.
    */
-  private final List<List<NodeInfo>> mKBucketsWaitingList;
+  private final List<List<NodeInfo>> mBucketsWaitingList;
   private final Key mLocalKey;
   private InetSocketAddress mLocalAddress;
   private final MessageSender mMessageSender;
@@ -93,8 +93,8 @@ class KademliaRoutingImpl implements KademliaRouting {
     mBucketSize = bucketSize;
     mAlpha = alpha;
     mEntryRefreshDelay = entryRefreshDelay;
-    mKBuckets = initializeKBuckets();
-    mKBucketsWaitingList = initializeKBuckets();
+    mBuckets = initializeBuckets();
+    mBucketsWaitingList = initializeBuckets();
     mLocalKey = localNodeInfo.getKey();
     mLocalAddress = localNodeInfo.getSocketAddress();
     mMessageSender = sender;
@@ -225,7 +225,7 @@ class KademliaRoutingImpl implements KademliaRouting {
   @Override
   public Collection<NodeInfo> getRoutingTable() {
     Collection<NodeInfo> routingTable = new ArrayList<>();
-    for (Collection<NodeInfo> bucket : mKBuckets) {
+    for (Collection<NodeInfo> bucket : mBuckets) {
       routingTable.addAll(bucket);
     }
     return routingTable;
@@ -487,8 +487,8 @@ class KademliaRoutingImpl implements KademliaRouting {
 
     public PingCheckMessageHandler(int bucketId) {
       mBucketId = bucketId;
-      mBucket = mKBuckets.get(mBucketId);
-      mBucketWaitingList = mKBucketsWaitingList.get(mBucketId);
+      mBucket = mBuckets.get(mBucketId);
+      mBucketWaitingList = mBucketsWaitingList.get(mBucketId);
     }
 
     @Override
@@ -540,7 +540,7 @@ class KademliaRoutingImpl implements KademliaRouting {
   }
 
   private void addPeersToBuckets(Collection<NodeInfo> initialKnownPeers) {
-    List<List<NodeInfo>> tempBuckets = initializeKBuckets();
+    List<List<NodeInfo>> tempBuckets = initializeBuckets();
     for (NodeInfo nodeInfo : initialKnownPeers) {
       if (!nodeInfo.getKey().equals(mLocalKey)) {
         tempBuckets.get(getLocalKey().getDistanceBit(nodeInfo.getKey())).add(nodeInfo);
@@ -550,9 +550,9 @@ class KademliaRoutingImpl implements KademliaRouting {
     for (int idx = 0; idx < Key.KEY_LENGTH; ++idx) {
       List<NodeInfo> tempBucket = tempBuckets.get(idx);
       Collections.shuffle(tempBuckets.get(idx), mRandom);
-      mKBuckets.get(idx).addAll(
+      mBuckets.get(idx).addAll(
           tempBucket.subList(0, Math.min(
-              tempBucket.size(), mBucketSize - mKBuckets.get(idx).size())));
+              tempBucket.size(), mBucketSize - mBuckets.get(idx).size())));
     }
   }
 
@@ -591,8 +591,8 @@ class KademliaRoutingImpl implements KademliaRouting {
   }
 
   private void clearBuckets() {
-    for (int idx = 0; idx < Key.KEY_LENGTH; ++idx) {
-      mKBuckets.get(idx).clear();
+    for (List<NodeInfo> bucket : mBuckets) {
+      bucket.clear();
     }
   }
 
@@ -612,7 +612,7 @@ class KademliaRoutingImpl implements KademliaRouting {
     SortedSet<Key> closestKeys = new BoundedSortedSet<>(new TreeSet<>(keyComparator), size);
     Map<Key, NodeInfo> keyInfoMap = new HashMap<>();
 
-    for (List<NodeInfo> bucket : mKBuckets) {
+    for (List<NodeInfo> bucket : mBuckets) {
       synchronized (bucket) {
         for (NodeInfo nodeInfo : bucket) {
           keyInfoMap.put(nodeInfo.getKey(), nodeInfo);
@@ -637,7 +637,7 @@ class KademliaRoutingImpl implements KademliaRouting {
     }
   }
 
-  private List<List<NodeInfo>> initializeKBuckets() {
+  private List<List<NodeInfo>> initializeBuckets() {
     List<List<NodeInfo>> buckets = new ArrayList<>(Key.KEY_LENGTH);
     for (int idx = 0; idx < Key.KEY_LENGTH; ++idx) {
       buckets.add(idx, new LinkedList<NodeInfo>());
@@ -660,7 +660,7 @@ class KademliaRoutingImpl implements KademliaRouting {
       return;
     }
     int distBit = getLocalKey().getDistanceBit(sourceNodeInfo.getKey());
-    List<NodeInfo> bucket = mKBuckets.get(distBit);
+    List<NodeInfo> bucket = mBuckets.get(distBit);
     synchronized (bucket) {
       int elementIndex = findIndexOfNodeInfo(bucket, sourceNodeInfo.getKey());
       if (elementIndex == -1) {
@@ -669,7 +669,7 @@ class KademliaRoutingImpl implements KademliaRouting {
           bucket.add(sourceNodeInfo);
         } else {
           NodeInfo firstNodeInfo = bucket.get(0);
-          List<NodeInfo> waitingBucket = mKBucketsWaitingList.get(distBit);
+          List<NodeInfo> waitingBucket = mBucketsWaitingList.get(distBit);
           if (findIndexOfNodeInfo(waitingBucket, sourceNodeInfo.getKey()) == -1) {
             waitingBucket.add(sourceNodeInfo);
             if (waitingBucket.size() == 1) {

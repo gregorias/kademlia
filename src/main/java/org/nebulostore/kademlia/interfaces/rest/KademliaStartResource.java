@@ -8,6 +8,11 @@ import javax.ws.rs.core.Response;
 
 import org.nebulostore.kademlia.core.KademliaRouting;
 
+/**
+ * Start this Kademlia peer.
+ *
+ * @author Grzegorz Milka
+ */
 @Path("start")
 public final class KademliaStartResource {
   private final KademliaRouting mKademlia;

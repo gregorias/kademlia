@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * REST interface for kademlia.
+ * REST interface for kademlia. See resources in this package for available commands.
  *
  * @author Grzegorz Milka
  */
@@ -49,15 +49,15 @@ public class RESTApp {
         server.shutdown();
       } catch (InterruptedException e) {
         server.shutdownNow();
-        LOGGER.error("run() -> Unexpected exception.", e);
+        LOGGER.error("run() -> Unexpected interrupt exception.", e);
         return;
       } finally {
         mLock.unlock();
       }
     } catch (IOException e) {
-      LOGGER.error("run() -> IOException .", e);
+      LOGGER.error("run() -> IOException.", e);
     }
-    LOGGER.info("run(): void");
+    LOGGER.info("run() -> void");
   }
 
   private ResourceConfig createConfig() {

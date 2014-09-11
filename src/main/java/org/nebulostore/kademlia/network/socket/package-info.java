@@ -1,5 +1,5 @@
 /**
- * Java Socket based implementation of network interfaces.
+ * Simple Java Socket based implementation of network interfaces.
  *
  * @author Grzegorz Milka
  */

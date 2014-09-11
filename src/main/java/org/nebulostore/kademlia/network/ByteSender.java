@@ -7,14 +7,15 @@ import java.net.InetSocketAddress;
  *
  * @author Grzegorz Milka
  */
-
 public interface ByteSender {
   /**
    * Sends message and expects response to it.
    *
-   * @param dest
-   * @param array
+   * @param destination Destination address
+   * @param message
    * @param handler
    */
-  void sendMessageWithReply(InetSocketAddress dest, byte[] array, ByteResponseHandler handler);
+  void sendMessageWithReply(InetSocketAddress destination,
+      byte[] message,
+      ByteResponseHandler handler);
 }

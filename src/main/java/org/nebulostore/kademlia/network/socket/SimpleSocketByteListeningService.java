@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of {@link ByteListeningService} which creates a ServerSocket
- * and listens on single thread.
+ * and listens on a single thread.
  *
  * @author Grzegorz Milka
  */
 public final class SimpleSocketByteListeningService implements ByteListeningService, Runnable {
-  private static final Logger LOGGER = LoggerFactory
-      .getLogger(SimpleSocketByteListeningService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(
+      SimpleSocketByteListeningService.class);
 
   private final int mPort;
   private final ExecutorService mServiceExecutor;
@@ -71,9 +71,7 @@ public final class SimpleSocketByteListeningService implements ByteListeningServ
           if (mListener != null) {
             response = mListener.receiveByteArrayWithResponse(msg);
             if (response != null) {
-              byte[] intBuffer = SimpleSocketByteSender.transformIntToByteArray(response.length);
-              clientSocket.getOutputStream().write(intBuffer);
-              clientSocket.getOutputStream().write(response);
+              SimpleSocketByteSender.writeMessage(clientSocket.getOutputStream(), response);
             }
             clientSocket.shutdownOutput();
           }
@@ -88,7 +86,7 @@ public final class SimpleSocketByteListeningService implements ByteListeningServ
         }
       }
     }
-    LOGGER.trace("run(): void");
+    LOGGER.trace("run() -> void");
   }
 
   public void start() throws IOException {

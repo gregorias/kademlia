@@ -3,11 +3,10 @@ package org.nebulostore.kademlia.network.socket;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-
 import org.nebulostore.kademlia.network.ByteResponseHandler;
 import org.nebulostore.kademlia.network.ByteSender;
 import org.slf4j.Logger;
@@ -22,27 +21,24 @@ public class SimpleSocketByteSender implements ByteSender {
   public static final int INT_LENGTH = 4;
   private static final Logger LOGGER = LoggerFactory.getLogger(SimpleSocketByteSender.class);
 
-  public SimpleSocketByteSender() {
-  }
-
   /**
    * Send given message. This method blocks till the sending operation is
    * finished.
    */
   @Override
   public void sendMessageWithReply(InetSocketAddress dest,
-      byte[] array,
+      byte[] message,
       ByteResponseHandler handler) {
-    LOGGER.debug("sendMessageWithReply({}, {}, {})", dest, array.length, handler);
+    LOGGER.debug("sendMessageWithReply({}, {}, {})", dest, message.length, handler);
 
     byte[] answer = null;
     boolean hasSent = false;
     try (Socket socket = new Socket(dest.getAddress(), dest.getPort())) {
-      socket.getOutputStream().write(transformIntToByteArray(array.length));
-      socket.getOutputStream().write(array);
+      writeMessage(socket.getOutputStream(), message);
       socket.shutdownOutput();
       hasSent = true;
-      LOGGER.debug("sendMessageWithReply() -> sent successfully array of length: {}", array.length);
+      LOGGER.debug("sendMessageWithReply() -> sent successfully message of length: {}",
+          message.length);
       handler.onSendSuccessful();
 
       answer = readMessage(socket.getInputStream());
@@ -61,7 +57,6 @@ public class SimpleSocketByteSender implements ByteSender {
       LOGGER.debug("sendMessageWithReply() -> handler.onResponse(length: {})", answer.length);
       handler.onResponse(answer);
     }
-
   }
 
   static byte[] readBytes(InputStream is, int byteCnt) throws IOException {
@@ -82,18 +77,22 @@ public class SimpleSocketByteSender implements ByteSender {
     if (intArray == null) {
       return null;
     }
-    IntBuffer intBuffer = ByteBuffer.wrap(intArray).asIntBuffer();
-    int msgLength = intBuffer.get();
+    int msgLength = transformByteArrayToInt(intArray);
 
     byte[] msgArray = readBytes(is, msgLength);
     return msgArray;
   }
 
-  static int transformByteArrayToInt(byte[] array) {
+  static void writeMessage(OutputStream outputStream, byte[] message) throws IOException {
+    outputStream.write(transformIntToByteArray(message.length));
+    outputStream.write(message);
+  }
+
+  private static int transformByteArrayToInt(byte[] array) {
     return ByteBuffer.wrap(array).asIntBuffer().get();
   }
 
-  static byte[] transformIntToByteArray(int length) {
+  private static byte[] transformIntToByteArray(int length) {
     ByteBuffer byteBuffer = ByteBuffer.allocate(INT_LENGTH);
     byteBuffer.putInt(length);
     return byteBuffer.array();
