@@ -2,7 +2,6 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
-apply plugin: 'sonar-runner'
 
 repositories {
     mavenCentral()
@@ -29,7 +28,6 @@ dependencies {
     runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
     runtime group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.+'
     testRuntime group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
-
 }
 
 task copyAllDependencies(type: Copy) {
@@ -54,7 +52,7 @@ findbugs {
     effort = "max"
     excludeFilter = file("$project.projectDir/config/findbugs/findbugsExcludeFilter.xml")
     reportLevel = "low"
-    toolVersion = "2.0.3"
+    toolVersion = "3.0.0"
     println toolVersion
 }
 
