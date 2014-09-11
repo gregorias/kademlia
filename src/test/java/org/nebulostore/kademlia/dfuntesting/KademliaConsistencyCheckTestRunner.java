@@ -36,7 +36,7 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
       int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts) {
     super(new KademliaConsistencyCheckTestScript(scheduledExecutor), LOGGER, environmentFactory,
         new KademliaEnvironmentPreparator(initialPort, initialKademliaPort, bucketSize,
-            shouldUseDifferentPorts), new LocalKademliaAppFactory());
+            shouldUseDifferentPorts), new KademliaAppFactory());
   }
 
   /**

@@ -7,7 +7,12 @@ import org.nebulostore.dfuntesting.ApplicationFactory;
 import org.nebulostore.dfuntesting.Environment;
 import org.nebulostore.kademlia.interfaces.Main;
 
-public class LocalKademliaAppFactory implements ApplicationFactory<KademliaApp> {
+/**
+ * Factory of {@link KademliaApp} on given {@link Environment}.
+ *
+ * @author Grzegorz Milka
+ */
+public class KademliaAppFactory implements ApplicationFactory<KademliaApp> {
   @Override
   public KademliaApp newApp(Environment env) {
     String address;
@@ -25,6 +30,6 @@ public class LocalKademliaAppFactory implements ApplicationFactory<KademliaApp> 
       throw new IllegalArgumentException("Could not create valid URI.", e);
     }
     return new KademliaApp(env.getId(), String.format("Local Kademlia[%d]", env.getId()),
-        (URI) uri, env);
+        uri, env);
   }
 }

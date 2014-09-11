@@ -25,6 +25,12 @@ import org.nebulostore.kademlia.interfaces.rest.NodeInfoCollectionBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implementation of {@link App} to Kademlia application which uses REST interface for
+ * communication.
+ *
+ * @author Grzegorz Milka
+ */
 public class KademliaApp extends App {
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaApp.class);
   private final Environment mKademliaEnv;
