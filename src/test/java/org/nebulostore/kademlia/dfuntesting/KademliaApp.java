@@ -37,20 +37,6 @@ public class KademliaApp extends App {
     mKademliaEnv = env;
   }
 
-  @Override
-  public synchronized boolean isRunning() {
-    return mProcess != null;
-  }
-
-  public boolean isWorking() {
-    try {
-      getRoutingTable();
-      return true;
-    } catch (IOException e) {
-      return false;
-    }
-  }
-
   public Collection<NodeInfo> findNodes(Key key) throws IOException {
     Client client = ClientBuilder.newClient();
     WebTarget target = client.target(mUri).path("find_nodes/" + key.toInt().toString(Key.HEX));
@@ -104,6 +90,20 @@ public class KademliaApp extends App {
     }
     LOGGER.debug("getRoutingTable() -> returning with infos.");
     return infos;
+  }
+
+  @Override
+  public synchronized boolean isRunning() {
+    return mProcess != null;
+  }
+
+  public boolean isWorking() {
+    try {
+      getRoutingTable();
+      return true;
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   @Override
