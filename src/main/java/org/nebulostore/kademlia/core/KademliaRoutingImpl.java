@@ -121,9 +121,10 @@ class KademliaRoutingImpl implements KademliaRouting {
   }
 
   @Override
-  public Collection<NodeInfo> findClosestNodes(Key key, int size) throws InterruptedException {
+  public Collection<NodeInfo> findClosestNodes(Key key, int expectedFoundNodesSize) throws
+      InterruptedException {
     final KeyComparator findKeyComparator = new KeyComparator(key);
-    LOGGER.debug("findClosestKeys({}, {})", key.toString(), size);
+    LOGGER.debug("findClosestKeys({}, {})", key.toString(), expectedFoundNodesSize);
     mReadRunningLock.lock();
     try {
       if (!mIsRunning) {
@@ -132,7 +133,8 @@ class KademliaRoutingImpl implements KademliaRouting {
       Map<Key, NodeInfo> keyInfoMap = new HashMap<>();
       Set<Key> queriedKeys = new HashSet<>();
       PriorityQueue<Key> unqueriedKeys = new PriorityQueue<>(mBucketSize, findKeyComparator);
-      SortedSet<Key> candidateKeys = new BoundedSortedSet<>(new TreeSet<>(findKeyComparator), size);
+      SortedSet<Key> candidateKeys = new BoundedSortedSet<>(new TreeSet<>(findKeyComparator),
+          expectedFoundNodesSize);
 
       BlockingQueue<Future<Message>> replyQueue = new LinkedBlockingQueue<>();
       MessageResponseHandler responseHandler = new QueuedMessageResponseHandler(replyQueue);
@@ -145,6 +147,8 @@ class KademliaRoutingImpl implements KademliaRouting {
         keyInfoMap.put(nodeInfo.getKey(), nodeInfo);
       }
 
+      /* Send up to mAlpha concurrent messages and continue sending until we either get expected
+       * answer or run out of peers to query */
       int connectionIdx = 0;
       while (connectionIdx < mAlpha && !unqueriedKeys.isEmpty()) {
         Key closestKey = unqueriedKeys.remove();
@@ -161,16 +165,15 @@ class KademliaRoutingImpl implements KademliaRouting {
         connectionIdx -= 1;
         try {
           FindNodeReplyMessage msg = (FindNodeReplyMessage) future.get();
+          /* Process found nodes */
           for (NodeInfo foundNodeInfo : msg.getFoundNodes()) {
             NodeInfo nodeInfoInMap = keyInfoMap.get(foundNodeInfo.getKey());
-            if (nodeInfoInMap != null
-                && !nodeInfoInMap.getSocketAddress().equals(foundNodeInfo.getSocketAddress())) {
+            if (nodeInfoInMap != null && !nodeInfoInMap.getSocketAddress().equals(
+                foundNodeInfo.getSocketAddress())) {
               /* Ignore */
-            } else if (!queriedKeys.contains(foundNodeInfo.getKey())) {
+            } else if (nodeInfoInMap == null) {
               unqueriedKeys.add(foundNodeInfo.getKey());
-              if (nodeInfoInMap == null) {
-                keyInfoMap.put(foundNodeInfo.getKey(), foundNodeInfo);
-              }
+              keyInfoMap.put(foundNodeInfo.getKey(), foundNodeInfo);
             }
           }
 
@@ -182,7 +185,9 @@ class KademliaRoutingImpl implements KademliaRouting {
           while (!unqueriedKeys.isEmpty()) {
             Key newKey = unqueriedKeys.remove();
             queriedKeys.add(newKey);
-            if (candidateKeys.size() < size
+            /* Send new query if we haven't reach expected size or unqueried key may be a
+             * candidate */
+            if (candidateKeys.size() < expectedFoundNodesSize
                 || findKeyComparator.compare(newKey, candidateKeys.last()) < 0) {
               NodeInfo nodeInfo = keyInfoMap.get(newKey);
               mMessageSender.sendMessageWithReply(nodeInfo.getSocketAddress(), new FindNodeMessage(
@@ -215,13 +220,6 @@ class KademliaRoutingImpl implements KademliaRouting {
     return mLocalKey;
   }
 
-  public boolean isRunning() {
-    mReadRunningLock.lock();
-    boolean isRunning = mIsRunning;
-    mReadRunningLock.unlock();
-    return isRunning;
-  }
-
   @Override
   public Collection<NodeInfo> getRoutingTable() {
     Collection<NodeInfo> routingTable = new ArrayList<>();
@@ -229,6 +227,13 @@ class KademliaRoutingImpl implements KademliaRouting {
       routingTable.addAll(bucket);
     }
     return routingTable;
+  }
+
+  public boolean isRunning() {
+    mReadRunningLock.lock();
+    boolean isRunning = mIsRunning;
+    mReadRunningLock.unlock();
+    return isRunning;
   }
 
   @Override
@@ -270,7 +275,7 @@ class KademliaRoutingImpl implements KademliaRouting {
     } finally {
       mWriteRunningLock.unlock();
     }
-    LOGGER.info("stop(): void");
+    LOGGER.info("stop() -> void");
   }
 
   private class AddressChangeObserver implements Observer {
@@ -403,6 +408,11 @@ class KademliaRoutingImpl implements KademliaRouting {
 
   }
 
+  /**
+   * {@link MessageResponseHandler} which puts responses into given queue.
+   *
+   * @author Grzegorz Milka
+   */
   private class QueuedMessageResponseHandler implements MessageResponseHandler {
     private final BlockingQueue<Future<Message>> mOutputQueue;
 
@@ -533,12 +543,6 @@ class KademliaRoutingImpl implements KademliaRouting {
     }
   }
 
-  private void addPeerToBucket(NodeInfo peer) {
-    Collection<NodeInfo> peers = new LinkedList<>();
-    peers.add(peer);
-    addPeersToBuckets(peers);
-  }
-
   private void addPeersToBuckets(Collection<NodeInfo> initialKnownPeers) {
     List<List<NodeInfo>> tempBuckets = initializeBuckets();
     for (NodeInfo nodeInfo : initialKnownPeers) {
@@ -570,17 +574,18 @@ class KademliaRoutingImpl implements KademliaRouting {
       mMessageSender.sendMessageWithReply(address, gkMsg, queuedMsgResponseHandler);
     }
 
+    Collection<NodeInfo> responsivePeers = new LinkedList<>();
     for (int idx = 0; idx < initialPeerAddresses.size(); ++idx) {
       try {
         Future<Message> future = queue.take();
         PongMessage pong = null;
         try {
           pong = (PongMessage) future.get();
-          addPeerToBucket(pong.getSourceNodeInfo());
+          responsivePeers.add(pong.getSourceNodeInfo());
         } catch (ClassCastException e) {
           LOGGER.warn("checkKeysOfUnknownPeers() -> received message which is not pong: %s", pong);
         } catch (ExecutionException e) {
-          LOGGER.info(
+          LOGGER.error(
               "checkKeysOfUnknownPeers() -> exception happened when trying to get key from host",
               e);
         }
@@ -588,6 +593,7 @@ class KademliaRoutingImpl implements KademliaRouting {
         throw new IllegalStateException("Unexpected interrupt");
       }
     }
+    addPeersToBuckets(responsivePeers);
   }
 
   private void clearBuckets() {

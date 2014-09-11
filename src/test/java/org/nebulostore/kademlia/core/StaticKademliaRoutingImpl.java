@@ -21,6 +21,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link KademliaRouting} implementation which has static routing table.
+ *
+ * @author Grzegorz Milka
+ */
 class StaticKademliaRoutingImpl implements KademliaRouting {
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaRoutingImpl.class);
 
