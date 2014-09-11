@@ -30,6 +30,16 @@ dependencies {
     testRuntime group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
 }
 
+compileJava {
+    sourceCompatibility = '1.7'
+    targetCompatibility = '1.7'
+}
+
+compileTestJava {
+    sourceCompatibility = '1.7'
+    targetCompatibility = '1.7'
+}
+
 task copyAllDependencies(type: Copy) {
     from configurations.runtime
     into 'allLibs'
