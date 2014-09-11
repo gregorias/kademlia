@@ -1,5 +1,5 @@
 /**
- * Interfaces for kademlia peer networks.
+ * Entry point classes for Kademlia peer networks.
  *
  * @author Grzegorz Milka
  */

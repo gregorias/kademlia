@@ -29,9 +29,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Main access point to kademlia interface.
+ * Main access point to kademlia.
  *
- * It expects XML config filename as an argument.
+ * This main starts up basic kademlia peer and sets up a REST interface.
+ * It expects an XML configuration filename as an argument.
+ *
+ * XML configuration recognizes the following fields:
+ * <ul>
+ * <li> local-net-address - IP/host address of local host. </li>
+ * <li> local-net-port - port to be used by local kademlia host. </li>
+ * <li> bootstrap-key - the kademlia key of bootstrap host. </li>
+ * <li> bootstrap-net-address - IP/host address of boostrap host. </li>
+ * <li> bootstrap-net-port - port used by bootstrap host. </li>
+ * <li> local-key - key to be used by local kademlia host. </li>
+ * <li> bucket-size - size of local kademlia bucket. </li>
+ * <li> rest-port - port of local REST interface. </li>
+ * </ul>
+ *
+ * @see RESTApp
  *
  * @author Grzegorz Milka
  */
@@ -57,7 +72,7 @@ public class Main {
     try {
       config = new XMLConfiguration(new File(configFile));
     } catch (ConfigurationException e) {
-      LOGGER.error("main() -> could not read configuration.", e);
+      LOGGER.error("main() -> Could not read configuration.", e);
       return;
     }
 
@@ -83,7 +98,7 @@ public class Main {
     try {
       ssbls.start();
     } catch (IOException e) {
-      LOGGER.error("main() -> could not create listening service.", e);
+      LOGGER.error("main() -> Could not create listening service.", e);
       return;
     }
     builder.setByteListeningService(ssbls);
@@ -101,8 +116,11 @@ public class Main {
         localInetAddress, localPort)));
 
     KademliaRouting kademlia = builder.createPeer();
+
     RESTApp app = new RESTApp(kademlia, baseURI);
+
     app.run();
+
     if (kademlia.isRunning()) {
       try {
         kademlia.stop();
@@ -121,6 +139,6 @@ public class Main {
     } catch (InterruptedException e) {
       LOGGER.error("main() -> unexpected interrupt", e);
     }
-    LOGGER.info("main(): void");
+    LOGGER.info("main() -> void");
   }
 }
