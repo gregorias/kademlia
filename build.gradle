@@ -3,6 +3,8 @@ apply plugin: 'eclipse'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
 
+def RUNTIME_LIB_DIRECTORY = "lib/"
+
 repositories {
     mavenCentral()
 }
@@ -48,6 +50,13 @@ task copyAllDependencies(type: Copy) {
     into 'allLibs'
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.nebulostore.kademlia.interfaces.Main',
+                   'Class-Path': generateClassPath(configurations.runtime, RUNTIME_LIB_DIRECTORY, " ")
+    }
+}
+
 task jarTest(type: Jar) {
     from sourceSets.test.output
     baseName += 'Test'
@@ -76,4 +85,14 @@ tasks.withType(FindBugs) {
 /* Generate gradlew and gradle wrappers for portable gradle use */
 task wrapper(type: Wrapper) {
     gradleVersion = '2.1'
+}
+
+def generateClassPath(configurationSet, prefix, separator) {
+    def classPathString = ""
+    configurationSet.each { File file -> classPathString += prefix + file.getName() + separator }
+    if (classPathString.size() == 0) {
+        return classPathString;
+    } else {
+        return classPathString.getAt([0..(classPathString.size() - 2)]);
+    }
 }
