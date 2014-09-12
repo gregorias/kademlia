@@ -26,7 +26,7 @@ include it into gradle multiproject build. Assuming kademlia repository is in
 copyAllDependencies task
 ------------------------
 Run `./gradlew copyAllDependencies' to copy all kademlia dependencies into
-`allLibs` directory.
+`lib` directory.
 
 
 Build basic kademlia application with REST interface

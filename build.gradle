@@ -3,6 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
 
+def DEPENDENCY_LIB_DIRECTORY = "lib/"
 def RUNTIME_LIB_DIRECTORY = "lib/"
 
 repositories {
@@ -44,10 +45,10 @@ compileTestJava {
 
 task copyAllDependencies(type: Copy) {
     from configurations.runtime
-    into 'allLibs'
+    into DEPENDENCY_LIB_DIRECTORY
 
     from configurations.testRuntime
-    into 'allLibs'
+    into DEPENDENCY_LIB_DIRECTORY
 }
 
 jar {

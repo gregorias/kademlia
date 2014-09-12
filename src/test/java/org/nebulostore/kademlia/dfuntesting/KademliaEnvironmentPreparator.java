@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * This preparator prepares XML configuration file expected by {@link Main} and sets up environment
  * properties for {@link KademliaAppFactory}.
  *
- * It expects that all required libraries are in allLibs directory and kademlia itself is in
+ * It assumes that all required libraries are in lib/ directory and kademlia itself is in
  * kademlia.jar file.
  *
  * @author Grzegorz Milka
@@ -31,7 +31,7 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
   private static final String XML_CONFIG_FILENAME = "kademlia.xml";
   private static final Path XML_CONFIG_PATH = FileSystems.getDefault().getPath(XML_CONFIG_FILENAME);
   private static final Path XML_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
-  private static final Path XML_LIBS_PATH = FileSystems.getDefault().getPath("allLibs");
+  private static final Path XML_LIBS_PATH = FileSystems.getDefault().getPath("lib");
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaEnvironmentPreparator.class);
   private final int mInitialPort;
   private final int mInitialRestPort;

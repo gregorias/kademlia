@@ -29,7 +29,11 @@ import org.slf4j.LoggerFactory;
  * Implementation of {@link App} to Kademlia application which uses REST interface for
  * communication.
  *
- * KademliaApp expects that simple logger is used and will output logs into stderr.log file.
+ * KademliaApp assumes that:
+ * <ul>
+ * <li> Simple logger is used and will output logs into stderr.log file. </li>
+ * <li> All dependencies are in lib/ directory. </li>
+ * </ul>
  *
  * @author Grzegorz Milka
  */
@@ -122,7 +126,7 @@ public class KademliaApp extends App {
     runCommand.add("-Dorg.slf4j.simpleLogger.logFile=" + LOG_FILE);
     runCommand.add("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace");
     runCommand.add("-cp");
-    runCommand.add("allLibs/*:kademlia.jar");
+    runCommand.add("lib/*:kademlia.jar");
     runCommand.add("org.nebulostore.kademlia.interfaces.Main");
     runCommand.add("kademlia.xml");
     mProcess = mKademliaEnv.runCommandAsynchronously(runCommand);
