@@ -16,18 +16,39 @@ import org.nebulostore.kademlia.interfaces.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Preparator of testing environments for Kademlia tests.
+ *
+ * This preparator prepares XML configuration file expected by {@link Main} and sets up environment
+ * properties for {@link KademliaAppFactory}.
+ *
+ * It expects that all required libraries are in allLibs directory and kademlia itself is in
+ * kademlia.jar file.
+ *
+ * @author Grzegorz Milka
+ */
 public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
-  public static final String XML_CONFIG_FILENAME = "kademlia.xml";
-  public static final Path XML_CONFIG_PATH = FileSystems.getDefault().getPath(XML_CONFIG_FILENAME);
-  public static final Path XML_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
-  public static final Path XML_LIBS_PATH = FileSystems.getDefault().getPath("allLibs");
+  private static final String XML_CONFIG_FILENAME = "kademlia.xml";
+  private static final Path XML_CONFIG_PATH = FileSystems.getDefault().getPath(XML_CONFIG_FILENAME);
+  private static final Path XML_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
+  private static final Path XML_LIBS_PATH = FileSystems.getDefault().getPath("allLibs");
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaEnvironmentPreparator.class);
   private final int mInitialPort;
   private final int mInitialRestPort;
   private final int mBucketSize;
   private final boolean mUseDifferentPorts;
 
-  public KademliaEnvironmentPreparator(int initialPort, int initialRestPort, int bucketSize,
+  /**
+   *
+   * @param initialPort Port number used by first kademlia application for kademlia.
+   * @param initialRestPort Port number used by first kademlia application for REST.
+   * @param bucketSize BucketSize of each kademlia peer.
+   * @param useDifferentPorts Whether each kademlia peer should use a different port.
+   * Used when all peers are on the same host.
+   */
+  public KademliaEnvironmentPreparator(int initialPort,
+      int initialRestPort,
+      int bucketSize,
       boolean useDifferentPorts) {
     mInitialPort = initialPort;
     mInitialRestPort = initialRestPort;
@@ -53,6 +74,10 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
     // TODO
   }
 
+  /**
+   * This method expects that environments are numbered from 0.
+   * Zero environment will be configured as kademlia bootstrap server.
+   */
   @Override
   public void prepareEnvironments(Collection<Environment> envs) throws ExecutionException {
     Collection<Environment> preparedEnvs = new LinkedList<>();
