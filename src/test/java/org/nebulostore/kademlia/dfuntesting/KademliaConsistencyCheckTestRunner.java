@@ -2,6 +2,8 @@ package org.nebulostore.kademlia.dfuntesting;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,13 +32,14 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
   private static final String XML_FIELD_INITIAL_PORT = "initial-kademlia-port";
   private static final String XML_FIELD_REST_PORT = "initial-rest-port";
   private static final String XML_FIELD_SHOULD_USE_DIFFERENT_PORTS = "should-use-different-ports";
+  private static final Path REPORT_PATH = FileSystems.getDefault().getPath("report");
 
   public KademliaConsistencyCheckTestRunner(ScheduledExecutorService scheduledExecutor,
       ExecutorService executor, EnvironmentFactory environmentFactory, int initialPort,
       int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts) {
     super(new KademliaConsistencyCheckTestScript(scheduledExecutor), LOGGER, environmentFactory,
         new KademliaEnvironmentPreparator(initialPort, initialKademliaPort, bucketSize,
-            shouldUseDifferentPorts), new KademliaAppFactory());
+            shouldUseDifferentPorts, REPORT_PATH), new KademliaAppFactory());
   }
 
   /**

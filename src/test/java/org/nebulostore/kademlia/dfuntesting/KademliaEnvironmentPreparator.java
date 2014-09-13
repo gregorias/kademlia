@@ -22,47 +22,54 @@ import org.slf4j.LoggerFactory;
  * This preparator prepares XML configuration file expected by {@link Main} and sets up environment
  * properties for {@link KademliaAppFactory}.
  *
- * It assumes that all required libraries are in lib/ directory and kademlia itself is in
- * kademlia.jar file.
+ * It assumes that:
+ * <ul>
+ * <li> All required dependency libraries are in lib/ directory. </li>
+ * <li> Kademlia is in kademlia.jar file. </li>
+ * </ul>
  *
  * @author Grzegorz Milka
  */
 public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
   private static final String XML_CONFIG_FILENAME = "kademlia.xml";
-  private static final Path XML_CONFIG_PATH = FileSystems.getDefault().getPath(XML_CONFIG_FILENAME);
-  private static final Path XML_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
-  private static final Path XML_LIBS_PATH = FileSystems.getDefault().getPath("lib");
+  private static final Path LOCAL_CONFIG_PATH = FileSystems.getDefault().getPath(
+      XML_CONFIG_FILENAME);
+  private static final Path LOCAL_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
+  private static final Path LOCAL_LIBS_PATH = FileSystems.getDefault().getPath("lib");
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaEnvironmentPreparator.class);
   private final int mInitialPort;
   private final int mInitialRestPort;
   private final int mBucketSize;
   private final boolean mUseDifferentPorts;
+  private final Path mReportPath;
 
   /**
-   *
    * @param initialPort Port number used by first kademlia application for kademlia.
    * @param initialRestPort Port number used by first kademlia application for REST.
    * @param bucketSize BucketSize of each kademlia peer.
    * @param useDifferentPorts Whether each kademlia peer should use a different port.
+   * @param reportPath Path where logs will be placed in consecutive directories.
    * Used when all peers are on the same host.
    */
   public KademliaEnvironmentPreparator(int initialPort,
       int initialRestPort,
       int bucketSize,
-      boolean useDifferentPorts) {
+      boolean useDifferentPorts,
+      Path reportPath) {
     mInitialPort = initialPort;
     mInitialRestPort = initialRestPort;
     mBucketSize = bucketSize;
     mUseDifferentPorts = useDifferentPorts;
+    mReportPath = reportPath;
   }
 
   @Override
   public void cleanEnvironments(Collection<Environment> envs) {
+    Path logFilePath = getLogFilePath();
     for (Environment env : envs) {
-      Path localPath = FileSystems.getDefault().getPath(".");
-      Path kademliaXMLPath = localPath.resolve(XML_CONFIG_PATH);
       try {
-        env.removeFile(kademliaXMLPath);
+        env.removeFile(LOCAL_CONFIG_PATH);
+        env.removeFile(logFilePath);
       } catch (IOException e) {
         LOGGER.error("cleanEnvironments(): Could not clean environment.", e);
       }
@@ -71,7 +78,14 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
 
   @Override
   public void collectOutputAndLogFiles(Collection<Environment> envs) {
-    // TODO
+    Path logFilePath = getLogFilePath();
+    for (Environment env : envs) {
+      try {
+        env.copyFilesToLocalDisk(logFilePath, mReportPath.resolve(env.getId() + ""));
+      } catch (IOException e) {
+        LOGGER.error("collectOutputAndLogFiles(): Could not copy log file.", e);
+      }
+    }
   }
 
   /**
@@ -88,9 +102,9 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
       try {
         xmlConfig.save(XML_CONFIG_FILENAME);
         Path targetPath = FileSystems.getDefault().getPath(".");
-        env.copyFilesFromLocalDisk(XML_CONFIG_PATH.toAbsolutePath(), targetPath);
-        env.copyFilesFromLocalDisk(XML_JAR_PATH.toAbsolutePath(), targetPath);
-        env.copyFilesFromLocalDisk(XML_LIBS_PATH.toAbsolutePath(), targetPath);
+        env.copyFilesFromLocalDisk(LOCAL_CONFIG_PATH.toAbsolutePath(), targetPath);
+        env.copyFilesFromLocalDisk(LOCAL_JAR_PATH.toAbsolutePath(), targetPath);
+        env.copyFilesFromLocalDisk(LOCAL_LIBS_PATH.toAbsolutePath(), targetPath);
         preparedEnvs.add(env);
       } catch (ConfigurationException | IOException e) {
         cleanEnvironments(preparedEnvs);
@@ -108,6 +122,10 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
       }
     }
     throw new NoSuchElementException("No zero environment present");
+  }
+
+  private Path getLogFilePath() {
+    return FileSystems.getDefault().getPath("./" + KademliaApp.LOG_FILE);
   }
 
   private XMLConfiguration prepareXMLAndEnvConfiguration(Environment env, Environment zeroEnv) {

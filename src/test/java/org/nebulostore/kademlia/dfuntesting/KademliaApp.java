@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
  *
  * KademliaApp assumes that:
  * <ul>
- * <li> Simple logger is used and will output logs into stderr.log file. </li>
- * <li> All dependencies are in lib/ directory. </li>
+ * <li> Simple logger is used and will output logs into stderr.log file.</li>
+ * <li> All dependencies are in lib/ directory.</li>
  * </ul>
  *
  * @author Grzegorz Milka
