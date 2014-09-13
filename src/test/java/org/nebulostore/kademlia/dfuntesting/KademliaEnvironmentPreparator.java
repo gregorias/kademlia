@@ -48,8 +48,8 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
    * @param initialRestPort Port number used by first kademlia application for REST.
    * @param bucketSize BucketSize of each kademlia peer.
    * @param useDifferentPorts Whether each kademlia peer should use a different port.
-   * @param reportPath Path where logs will be placed in consecutive directories.
    * Used when all peers are on the same host.
+   * @param reportPath Path where logs will be placed in consecutive directories.
    */
   public KademliaEnvironmentPreparator(int initialPort,
       int initialRestPort,
