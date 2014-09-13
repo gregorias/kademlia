@@ -19,7 +19,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TestRunner for {@link KademliaConsistencyCheckTestScript}
+ * TestRunner for {@link KademliaConsistencyCheckTestScript}.
+ *
+ * This is the main entry point for Consistency Check test. The main method accepts
+ * configuration filename.
+ *
+ * The configuration filename should contain following fields:
+ * <ul>
+ * <li> environment-factory-class-name - Class name of factory which will initialize
+ * environments. </li>
+ * <li> environment-factory-config - Subconfiguration which will be given to
+ * {@link EnvironmentFactory} </li>
+ * <li> bucket-size - Default size of bucket. </li>
+ * <li> initial-kademlia-port - Initial port number used by first peer for kademlia
+ * communication. </li>
+ * <li> initial-rest-port - As above but for REST. </li>
+ * <li> should-use-different-ports - Whether this test should use different port numbers for each
+ * application, for example when some peers are on the same host. </li>
+ * </ul>
  *
  * @author Grzegorz Milka
  */
@@ -124,7 +141,8 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
       status = 1;
       resultStr = "with failure";
     }
-    LOGGER.info("main(): Test has ended with description: {}", resultStr, result.getDescription());
+    LOGGER.info("main(): Test has ended {} with description: {}", resultStr,
+        result.getDescription());
     System.exit(status);
   }
 }
