@@ -29,6 +29,10 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
   private static final TimeUnit START_UP_DELAY_UNIT = TimeUnit.SECONDS;
   private static final long CHECK_DELAY = 20;
   private static final TimeUnit CHECK_DELAY_UNIT = TimeUnit.SECONDS;
+
+  /**
+   * How many times consistency check should be run.
+   */
   private static final int CHECK_COUNT = 5;
 
   private final ScheduledExecutorService mScheduledExecutor;
@@ -46,7 +50,7 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     Collection<KademliaApp> runningApps = new LinkedList<>();
 
     try {
-      runApps(apps);
+      startUpApps(apps);
       runningApps.addAll(apps);
       try {
         Thread.sleep(START_UP_DELAY_UNIT.toMillis(START_UP_DELAY));
@@ -54,9 +58,9 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
         LOGGER.warn("Unexpected interrupt.");
       }
       LOGGER.info("run(): Starting apps.");
-      startApps(apps);
+      startKademlias(apps);
     } catch (CommandException | KademliaException | IOException e) {
-      shutdownApps(runningApps);
+      shutDownApps(runningApps);
       return new TestResult(Type.FAILURE, "Could not start applications due to: " + e.getMessage()
           + ".");
     }
@@ -78,8 +82,8 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
       }
     }
 
-    stopApps(apps);
-    shutdownApps(apps);
+    stopKademlias(apps);
+    shutDownApps(apps);
     LOGGER.info("run() -> {}", mResult);
     return mResult;
   }
@@ -106,26 +110,26 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
           mResult = new TestResult(Type.FAILURE, "Graph is not consistent starting from: "
               + result.getStartVert() + " could only reach " + result.getReachableVerts().size()
               + ".");
-          shutdown();
+          shutDown();
           LOGGER.info("ConsistencyChecker.run() -> failure");
           return;
         }
       } catch (IOException e) {
         mResult = new TestResult(Type.FAILURE, "Could not get connection graph: " + e + ".");
-        shutdown();
+        shutDown();
         LOGGER.info("ConsistencyChecker.run() -> failure");
         return;
       }
 
       --mCheckCount;
       if (mCheckCount == 0) {
-        shutdown();
+        shutDown();
       }
 
       LOGGER.info("ConsistencyChecker.run() -> success");
     }
 
-    private void shutdown() {
+    private void shutDown() {
       mScheduledExecutor.shutdown();
 
       synchronized (KademliaConsistencyCheckTestScript.this) {
@@ -222,7 +226,7 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     return graph;
   }
 
-  private static void runApps(Collection<KademliaApp> apps) throws CommandException {
+  private static void startUpApps(Collection<KademliaApp> apps) throws CommandException {
     Collection<KademliaApp> startedApps = new LinkedList<>();
     for (KademliaApp app : apps) {
       try {
@@ -243,16 +247,17 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     }
   }
 
-  private static void startApps(Collection<KademliaApp> apps) throws
+  private static void startKademlias(Collection<KademliaApp> kademlias) throws
       KademliaException,
       IOException {
     Collection<KademliaApp> runApps = new LinkedList<>();
-    for (KademliaApp app : apps) {
+    for (KademliaApp kademlia : kademlias) {
       try {
-        app.start();
-        runApps.add(app);
+        kademlia.start();
+        runApps.add(kademlia);
       } catch (IOException | KademliaException e) {
-        LOGGER.error("startApps() -> Could not start kademlia application: {}", app.getName(), e);
+        LOGGER.error("startApps() -> Could not start kademlia application: {}",
+            kademlia.getName(), e);
         for (KademliaApp appToStop : runApps) {
           try {
             appToStop.shutDown();
@@ -266,17 +271,18 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     }
   }
 
-  private static void stopApps(Collection<KademliaApp> apps) {
-    for (KademliaApp app : apps) {
+  private static void stopKademlias(Collection<KademliaApp> kademlias) {
+    for (KademliaApp kademlia : kademlias) {
       try {
-        app.stop();
+        kademlia.stop();
       } catch (IOException | KademliaException e) {
-        LOGGER.error("stopApps() -> Could not shutdown kademlia application: {}", app.getName(), e);
+        LOGGER.error("stopApps() -> Could not shutdown kademlia application: {}",
+            kademlia.getName(), e);
       }
     }
   }
 
-  private static void shutdownApps(Collection<KademliaApp> apps) {
+  private static void shutDownApps(Collection<KademliaApp> apps) {
     for (KademliaApp app : apps) {
       try {
         app.shutDown();
