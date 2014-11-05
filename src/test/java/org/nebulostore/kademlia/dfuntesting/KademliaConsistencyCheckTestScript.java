@@ -57,7 +57,7 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
       }
       LOGGER.info("run(): Starting apps.");
       startKademlias(apps);
-    } catch (CommandException | KademliaException | IOException e) {
+    } catch (KademliaException | IOException e) {
       shutDownApps(apps);
       return new TestResult(Type.FAILURE, "Could not start applications due to: " + e.getMessage()
           + ".");
@@ -224,13 +224,13 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     return graph;
   }
 
-  private static void startUpApps(Collection<KademliaApp> apps) throws CommandException {
+  private static void startUpApps(Collection<KademliaApp> apps) throws IOException {
     Collection<KademliaApp> startedApps = new LinkedList<>();
     for (KademliaApp app : apps) {
       try {
         app.startUp();
         startedApps.add(app);
-      } catch (CommandException e) {
+      } catch (IOException e) {
         LOGGER.error("runApps() -> Could not run kademlia application: {}", app.getName(), e);
         for (KademliaApp startApp : startedApps) {
           try {

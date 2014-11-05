@@ -32,8 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
   private static final String XML_CONFIG_FILENAME = "kademlia.xml";
-  private static final Path LOCAL_CONFIG_PATH = FileSystems.getDefault().getPath(
-      XML_CONFIG_FILENAME);
+  private static final String LOCAL_CONFIG_PATH = XML_CONFIG_FILENAME;
   private static final Path LOCAL_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
   private static final Path LOCAL_LIBS_PATH = FileSystems.getDefault().getPath("lib");
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaEnvironmentPreparator.class);
@@ -65,20 +64,23 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
 
   @Override
   public void cleanEnvironments(Collection<Environment> envs) {
-    Path logFilePath = getLogFilePath();
+    String logFilePath = getLogFilePath();
     for (Environment env : envs) {
       try {
         env.removeFile(LOCAL_CONFIG_PATH);
         env.removeFile(logFilePath);
       } catch (IOException e) {
         LOGGER.error("cleanEnvironments(): Could not clean environment.", e);
+      } catch (InterruptedException e) {
+        LOGGER.warn("cleanEnvironments(): Could not clean environment.", e);
+        Thread.currentThread().interrupt();
       }
     }
   }
 
   @Override
   public void collectOutputAndLogFiles(Collection<Environment> envs) {
-    Path logFilePath = getLogFilePath();
+    String logFilePath = getLogFilePath();
     for (Environment env : envs) {
       try {
         env.copyFilesToLocalDisk(logFilePath, mReportPath.resolve(env.getId() + ""));
@@ -101,8 +103,9 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
       XMLConfiguration xmlConfig = prepareXMLAndEnvConfiguration(env, zeroEnvironment);
       try {
         xmlConfig.save(XML_CONFIG_FILENAME);
-        Path targetPath = FileSystems.getDefault().getPath(".");
-        env.copyFilesFromLocalDisk(LOCAL_CONFIG_PATH.toAbsolutePath(), targetPath);
+        String targetPath = ".";
+        Path localConfigPath = FileSystems.getDefault().getPath(LOCAL_CONFIG_PATH).toAbsolutePath();
+        env.copyFilesFromLocalDisk(localConfigPath, targetPath);
         env.copyFilesFromLocalDisk(LOCAL_JAR_PATH.toAbsolutePath(), targetPath);
         env.copyFilesFromLocalDisk(LOCAL_LIBS_PATH.toAbsolutePath(), targetPath);
         preparedEnvs.add(env);
@@ -124,8 +127,8 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
     throw new NoSuchElementException("No zero environment present");
   }
 
-  private Path getLogFilePath() {
-    return FileSystems.getDefault().getPath("./" + KademliaApp.LOG_FILE);
+  private String getLogFilePath() {
+    return "./" + KademliaApp.LOG_FILE;
   }
 
   private XMLConfiguration prepareXMLAndEnvConfiguration(Environment env, Environment zeroEnv) {

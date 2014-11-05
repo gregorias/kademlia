@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 
 import org.nebulostore.dfuntesting.App;
-import org.nebulostore.dfuntesting.CommandException;
 import org.nebulostore.dfuntesting.Environment;
+import org.nebulostore.dfuntesting.RemoteProcess;
 import org.nebulostore.kademlia.core.KademliaException;
 import org.nebulostore.kademlia.core.Key;
 import org.nebulostore.kademlia.core.NodeInfo;
@@ -43,7 +43,7 @@ public class KademliaApp extends App {
   private final Environment mKademliaEnv;
   private final URI mUri;
   private final String mJavaCommand;
-  private Process mProcess;
+  private RemoteProcess mProcess;
 
   public KademliaApp(int id, String name, URI uri, Environment env, String javaCommand) {
     super(id, name);
@@ -122,7 +122,7 @@ public class KademliaApp extends App {
   }
 
   @Override
-  public synchronized void startUp() throws CommandException {
+  public synchronized void startUp() throws IOException {
     List<String> runCommand = new LinkedList<>();
 
     runCommand.add(mJavaCommand);
