@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
  * <li> initial-rest-port - As above but for REST. </li>
  * <li> should-use-different-ports - Whether this test should use different port numbers for each
  * application, for example when some peers are on the same host. </li>
+ * <li> java-command - command which starts java on remote host. </li>
  * </ul>
  *
  * @author Grzegorz Milka
@@ -49,14 +50,16 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
   private static final String XML_FIELD_INITIAL_PORT = "initial-kademlia-port";
   private static final String XML_FIELD_REST_PORT = "initial-rest-port";
   private static final String XML_FIELD_SHOULD_USE_DIFFERENT_PORTS = "should-use-different-ports";
+  private static final String XML_FIELD_JAVA_COMMAND = "java-command";
   private static final Path REPORT_PATH = FileSystems.getDefault().getPath("report");
 
   public KademliaConsistencyCheckTestRunner(ScheduledExecutorService scheduledExecutor,
       ExecutorService executor, EnvironmentFactory environmentFactory, int initialPort,
-      int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts) {
+      int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts,
+      String javaCommand) {
     super(new KademliaConsistencyCheckTestScript(scheduledExecutor), LOGGER, environmentFactory,
         new KademliaEnvironmentPreparator(initialPort, initialKademliaPort, bucketSize,
-            shouldUseDifferentPorts, REPORT_PATH), new KademliaAppFactory());
+            shouldUseDifferentPorts, REPORT_PATH), new KademliaAppFactory(javaCommand));
   }
 
   /**
@@ -125,11 +128,12 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
     int initialRESTPort = testConfiguration.getInt(XML_FIELD_REST_PORT);
     int bucketSize = testConfiguration.getInt(XML_FIELD_BUCKET_SIZE);
     boolean shouldUseDiffentPorts = testConfiguration.getBoolean(
-        XML_FIELD_SHOULD_USE_DIFFERENT_PORTS, true);
+      XML_FIELD_SHOULD_USE_DIFFERENT_PORTS, true);
+    String javaCommand = testConfiguration.getString(XML_FIELD_JAVA_COMMAND, "java");
 
     KademliaConsistencyCheckTestRunner testRunner = new KademliaConsistencyCheckTestRunner(
         scheduledExecutor, executor, environmentFactory, initialKademliaPort, initialRESTPort,
-        bucketSize, shouldUseDiffentPorts);
+        bucketSize, shouldUseDiffentPorts, javaCommand);
 
     TestResult result = testRunner.run();
     int status;

@@ -42,12 +42,14 @@ public class KademliaApp extends App {
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaApp.class);
   private final Environment mKademliaEnv;
   private final URI mUri;
+  private final String mJavaCommand;
   private Process mProcess;
 
-  public KademliaApp(int id, String name, URI uri, Environment env) {
+  public KademliaApp(int id, String name, URI uri, Environment env, String javaCommand) {
     super(id, name);
     mUri = uri;
     mKademliaEnv = env;
+    mJavaCommand = javaCommand;
   }
 
   public Collection<NodeInfo> findNodes(Key key) throws IOException {
@@ -122,7 +124,8 @@ public class KademliaApp extends App {
   @Override
   public synchronized void startUp() throws CommandException {
     List<String> runCommand = new LinkedList<>();
-    runCommand.add("java");
+
+    runCommand.add(mJavaCommand);
     runCommand.add("-Dorg.slf4j.simpleLogger.logFile=" + LOG_FILE);
     runCommand.add("-Dorg.slf4j.simpleLogger.defaultLogLevel=trace");
     runCommand.add("-cp");

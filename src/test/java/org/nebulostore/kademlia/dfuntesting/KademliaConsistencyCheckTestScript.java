@@ -47,11 +47,9 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
   @Override
   public TestResult run(Collection<KademliaApp> apps) {
     LOGGER.info("run(): Running consistency test on {} hosts.", apps.size());
-    Collection<KademliaApp> runningApps = new LinkedList<>();
 
     try {
       startUpApps(apps);
-      runningApps.addAll(apps);
       try {
         Thread.sleep(START_UP_DELAY_UNIT.toMillis(START_UP_DELAY));
       } catch (InterruptedException e) {
@@ -60,7 +58,7 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
       LOGGER.info("run(): Starting apps.");
       startKademlias(apps);
     } catch (CommandException | KademliaException | IOException e) {
-      shutDownApps(runningApps);
+      shutDownApps(apps);
       return new TestResult(Type.FAILURE, "Could not start applications due to: " + e.getMessage()
           + ".");
     }
