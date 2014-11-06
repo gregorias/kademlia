@@ -12,7 +12,7 @@ of some idiosyncrasies. *READ* them before trying to use this library.
 
 dfuntesting dependency
 ----------------------
-Temporarily kademlia directly depends on dfuntesting library for testing.
+Temporarily kademlia directly depends on dfuntest library for testing.
 Unfortunately it's not published anywhere and currently is only a project on
 Github. This *WILL* be changed in the future, but for now it is required to
 include it into gradle multiproject build. Assuming kademlia repository is in
