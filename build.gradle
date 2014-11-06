@@ -28,7 +28,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.+'
     testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
-    testCompile project(':dfuntesting')
+    testCompile project(':dfuntest')
     runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
     runtime group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.+'
     testRuntime group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
@@ -54,7 +54,7 @@ task copyAllDependencies(type: Copy) {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.nebulostore.kademlia.interfaces.Main',
+        attributes 'Main-Class': 'Main',
                    'Class-Path': generateClassPath(configurations.runtime, RUNTIME_LIB_DIRECTORY, " ")
     }
 }
