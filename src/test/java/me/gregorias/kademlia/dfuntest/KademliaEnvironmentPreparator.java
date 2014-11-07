@@ -85,7 +85,7 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
       try {
         env.copyFilesToLocalDisk(logFilePath, mReportPath.resolve(env.getId() + ""));
       } catch (IOException e) {
-        LOGGER.error("collectOutputAndLogFiles(): Could not copy log file.", e);
+        LOGGER.warn("collectOutputAndLogFiles(): Could not copy log file.", e);
       }
     }
   }

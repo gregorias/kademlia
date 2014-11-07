@@ -54,12 +54,18 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
       } catch (InterruptedException e) {
         LOGGER.warn("Unexpected interrupt.");
       }
-      LOGGER.info("run(): Starting apps.");
+    } catch (IOException e) {
+      return new TestResult(Type.FAILURE, "Could not start up applications due to: "
+        + e.getMessage() + ".");
+    }
+
+    LOGGER.info("run(): Starting apps.");
+    try {
       startKademlias(apps);
     } catch (KademliaException | IOException e) {
       shutDownApps(apps);
-      return new TestResult(Type.FAILURE, "Could not start applications due to: " + e.getMessage()
-          + ".");
+      return new TestResult(Type.FAILURE, "Could not start kademlias due to: " + e.getMessage()
+        + ".");
     }
 
     mResult = new TestResult(Type.SUCCESS, "Connection graph was consistent the entire time.");
