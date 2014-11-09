@@ -28,7 +28,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.+'
     testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
-    testCompile project(':dfuntest')
+    testCompile group: 'me.gregorias', name: 'dfuntest', version: '0.1'
     runtime group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.+'
     runtime group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.+'
     testRuntime group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
