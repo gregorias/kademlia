@@ -1,3 +1,4 @@
+//TODO move dfuntest to separate source set
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
