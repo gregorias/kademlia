@@ -95,7 +95,7 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
    * Zero environment will be configured as kademlia bootstrap server.
    */
   @Override
-  public void prepareEnvironments(Collection<Environment> envs) throws ExecutionException {
+  public void prepareEnvironments(Collection<Environment> envs) throws IOException {
     Collection<Environment> preparedEnvs = new LinkedList<>();
     LOGGER.info("prepareEnvironments()");
     Environment zeroEnvironment = findZeroEnvironment(envs);
@@ -112,7 +112,7 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
       } catch (ConfigurationException | IOException e) {
         cleanEnvironments(preparedEnvs);
         LOGGER.error("prepareEnvironments() -> Could not prepare environment.", e);
-        throw new ExecutionException(e);
+        throw new IOException(e);
       }
     }
   }

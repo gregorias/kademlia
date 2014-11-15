@@ -57,7 +57,7 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
       ExecutorService executor, EnvironmentFactory environmentFactory, int initialPort,
       int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts,
       String javaCommand) {
-    super(new KademliaConsistencyCheckTestScript(scheduledExecutor), LOGGER, environmentFactory,
+    super(new KademliaConsistencyCheckTestScript(scheduledExecutor), environmentFactory,
         new KademliaEnvironmentPreparator(initialPort, initialKademliaPort, bucketSize,
             shouldUseDifferentPorts, REPORT_PATH), new KademliaAppFactory(javaCommand));
   }
