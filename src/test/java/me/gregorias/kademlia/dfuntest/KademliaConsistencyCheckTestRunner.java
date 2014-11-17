@@ -4,10 +4,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import me.gregorias.dfuntest.Environment;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -30,7 +30,10 @@ import org.slf4j.LoggerFactory;
  * environments. </li>
  * <li> environment-factory-config - Subconfiguration which will be given to
  * {@link EnvironmentFactory} </li>
- * <li> bucket-size - Default size of bucket. </li>
+ * <li> full-environment-preparation - boolean value.
+ * Set to true to fully initialize environments </li>
+ * <li> clean-up-environment - boolean value.
+ * If true environments will be completely cleaned after test </li>
  * <li> initial-kademlia-port - Initial port number used by first peer for kademlia
  * communication. </li>
  * <li> initial-rest-port - As above but for REST. </li>
@@ -41,11 +44,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Grzegorz Milka
  */
-public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<KademliaApp> {
+public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Environment, KademliaApp> {
   private static final Logger LOGGER = LoggerFactory.getLogger(
       KademliaConsistencyCheckTestRunner.class);
   private static final String XML_ENV_FACTORY_CLASS_FIELD = "environment-factory-class-name";
   private static final String XML_ENV_FACTORY_CONFIG_FIELD = "environment-factory-config";
+  private static final String XML_ENV_PREP_PREP_FIELD = "full-environment-preparation";
+  private static final String XML_ENV_PREP_CLEAN_FIELD = "clean-up-environment";
   private static final String XML_FIELD_BUCKET_SIZE = "bucket-size";
   private static final String XML_FIELD_INITIAL_PORT = "initial-kademlia-port";
   private static final String XML_FIELD_REST_PORT = "initial-rest-port";
@@ -54,12 +59,22 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
   private static final Path REPORT_PATH = FileSystems.getDefault().getPath("report");
 
   public KademliaConsistencyCheckTestRunner(ScheduledExecutorService scheduledExecutor,
-      ExecutorService executor, EnvironmentFactory environmentFactory, int initialPort,
-      int initialKademliaPort, int bucketSize, boolean shouldUseDifferentPorts,
+      EnvironmentFactory<Environment> environmentFactory,
+      boolean shouldPrepareEnvs,
+      boolean shouldCleanEnvs,
+      int initialPort,
+      int initialKademliaPort,
+      int bucketSize,
+      boolean shouldUseDifferentPorts,
       String javaCommand) {
-    super(new KademliaConsistencyCheckTestScript(scheduledExecutor), environmentFactory,
+    super(new KademliaConsistencyCheckTestScript(scheduledExecutor),
+        environmentFactory,
         new KademliaEnvironmentPreparator(initialPort, initialKademliaPort, bucketSize,
-            shouldUseDifferentPorts, REPORT_PATH), new KademliaAppFactory(javaCommand));
+            shouldUseDifferentPorts),
+        new KademliaAppFactory(javaCommand),
+        shouldPrepareEnvs,
+        shouldCleanEnvs,
+        REPORT_PATH);
   }
 
   /**
@@ -71,8 +86,9 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
    * factory that should be used environment-factory-config - config which will
    * be given to the environment factory
    *
-   * @param args
+   * @param args Main arguments
    */
+  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     if (args.length == 0) {
       System.err.println("Usage: KademliaConsistencyCheckTestRunner CONFIG_FILE");
@@ -89,7 +105,6 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
 
     String className = testConfiguration.getString(XML_ENV_FACTORY_CLASS_FIELD);
     ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-    ExecutorService executor = Executors.newCachedThreadPool();
     Class<?> environmentFactoryClass;
     try {
       environmentFactoryClass = Class.forName(className);
@@ -115,25 +130,36 @@ public class KademliaConsistencyCheckTestRunner extends SingleTestRunner<Kademli
       return;
     }
 
-    EnvironmentFactory environmentFactory;
+    EnvironmentFactory<Environment> environmentFactory;
     try {
-      environmentFactory = (EnvironmentFactory) constructor.newInstance(envFactoryConfig);
+      environmentFactory = (EnvironmentFactory<Environment>)
+          constructor.newInstance(envFactoryConfig);
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException e) {
       LOGGER.error("main(): Could not create instance of {}.", className, e);
       return;
     }
 
+    boolean shouldPrepareEnvs = testConfiguration.getBoolean(XML_ENV_PREP_PREP_FIELD, true);
+    boolean shouldCleanEnvs = testConfiguration.getBoolean(XML_ENV_PREP_CLEAN_FIELD, true);
+
     int initialKademliaPort = testConfiguration.getInt(XML_FIELD_INITIAL_PORT);
     int initialRESTPort = testConfiguration.getInt(XML_FIELD_REST_PORT);
     int bucketSize = testConfiguration.getInt(XML_FIELD_BUCKET_SIZE);
     boolean shouldUseDiffentPorts = testConfiguration.getBoolean(
-      XML_FIELD_SHOULD_USE_DIFFERENT_PORTS, true);
+        XML_FIELD_SHOULD_USE_DIFFERENT_PORTS, true);
     String javaCommand = testConfiguration.getString(XML_FIELD_JAVA_COMMAND, "java");
 
     KademliaConsistencyCheckTestRunner testRunner = new KademliaConsistencyCheckTestRunner(
-        scheduledExecutor, executor, environmentFactory, initialKademliaPort, initialRESTPort,
-        bucketSize, shouldUseDiffentPorts, javaCommand);
+        scheduledExecutor,
+        environmentFactory,
+        shouldPrepareEnvs,
+        shouldCleanEnvs,
+        initialKademliaPort,
+        initialRESTPort,
+        bucketSize,
+        shouldUseDiffentPorts,
+        javaCommand);
 
     TestResult result = testRunner.run();
     int status;

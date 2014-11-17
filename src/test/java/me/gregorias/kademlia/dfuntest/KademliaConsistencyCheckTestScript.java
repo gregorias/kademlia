@@ -177,12 +177,12 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     }
 
     public static enum Type {
-      CONSISTENT, INCONSISTENT;
+      CONSISTENT, INCONSISTENT
     }
   }
 
   private static ConsistencyResult checkConsistency(Map<Key, Collection<Key>> graph) {
-    Set<Key> reachableVerts = new HashSet<Key>();
+    Set<Key> reachableVerts = new HashSet<>();
     Queue<Key> toVisit = new LinkedList<>();
     if (graph.size() == 0) {
       return new ConsistencyResult(new Key(0), new LinkedList<Key>(), new LinkedList<Key>());
@@ -205,7 +205,7 @@ public class KademliaConsistencyCheckTestScript implements TestScript<KademliaAp
     if (graph.size() == reachableVerts.size()) {
       return new ConsistencyResult(firstVert, reachableVerts, new LinkedList<Key>());
     } else {
-      Set<Key> allVerts = new HashSet<Key>(graph.keySet());
+      Set<Key> allVerts = new HashSet<>(graph.keySet());
       allVerts.removeAll(reachableVerts);
       return new ConsistencyResult(firstVert, reachableVerts, allVerts);
     }

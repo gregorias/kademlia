@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Grzegorz Milka
  */
-public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
+public class KademliaEnvironmentPreparator implements EnvironmentPreparator<Environment> {
   private static final String XML_CONFIG_FILENAME = "kademlia.xml";
   private static final String LOCAL_CONFIG_PATH = XML_CONFIG_FILENAME;
   private static final Path LOCAL_JAR_PATH = FileSystems.getDefault().getPath("kademlia.jar");
@@ -40,7 +39,6 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
   private final int mInitialRestPort;
   private final int mBucketSize;
   private final boolean mUseDifferentPorts;
-  private final Path mReportPath;
 
   /**
    * @param initialPort Port number used by first kademlia application for kademlia.
@@ -48,42 +46,39 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
    * @param bucketSize BucketSize of each kademlia peer.
    * @param useDifferentPorts Whether each kademlia peer should use a different port.
    * Used when all peers are on the same host.
-   * @param reportPath Path where logs will be placed in consecutive directories.
    */
   public KademliaEnvironmentPreparator(int initialPort,
       int initialRestPort,
       int bucketSize,
-      boolean useDifferentPorts,
-      Path reportPath) {
+      boolean useDifferentPorts) {
     mInitialPort = initialPort;
     mInitialRestPort = initialRestPort;
     mBucketSize = bucketSize;
     mUseDifferentPorts = useDifferentPorts;
-    mReportPath = reportPath;
   }
 
   @Override
-  public void cleanEnvironments(Collection<Environment> envs) {
+  public void clean(Collection<Environment> envs) {
     String logFilePath = getLogFilePath();
     for (Environment env : envs) {
       try {
         env.removeFile(LOCAL_CONFIG_PATH);
         env.removeFile(logFilePath);
       } catch (IOException e) {
-        LOGGER.error("cleanEnvironments(): Could not clean environment.", e);
+        LOGGER.error("clean(): Could not clean environment.", e);
       } catch (InterruptedException e) {
-        LOGGER.warn("cleanEnvironments(): Could not clean environment.", e);
+        LOGGER.warn("clean(): Could not clean environment.", e);
         Thread.currentThread().interrupt();
       }
     }
   }
 
   @Override
-  public void collectOutputAndLogFiles(Collection<Environment> envs) {
+  public void collectOutputAndLogFiles(Collection<Environment> envs, Path reportDestPath) {
     String logFilePath = getLogFilePath();
     for (Environment env : envs) {
       try {
-        env.copyFilesToLocalDisk(logFilePath, mReportPath.resolve(env.getId() + ""));
+        env.copyFilesToLocalDisk(logFilePath, reportDestPath.resolve(env.getId() + ""));
       } catch (IOException e) {
         LOGGER.warn("collectOutputAndLogFiles(): Could not copy log file.", e);
       }
@@ -95,9 +90,9 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
    * Zero environment will be configured as kademlia bootstrap server.
    */
   @Override
-  public void prepareEnvironments(Collection<Environment> envs) throws IOException {
+  public void prepare(Collection<Environment> envs) throws IOException {
     Collection<Environment> preparedEnvs = new LinkedList<>();
-    LOGGER.info("prepareEnvironments()");
+    LOGGER.info("prepare()");
     Environment zeroEnvironment = findZeroEnvironment(envs);
     for (Environment env : envs) {
       XMLConfiguration xmlConfig = prepareXMLAndEnvConfiguration(env, zeroEnvironment);
@@ -110,9 +105,26 @@ public class KademliaEnvironmentPreparator implements EnvironmentPreparator {
         env.copyFilesFromLocalDisk(LOCAL_LIBS_PATH.toAbsolutePath(), targetPath);
         preparedEnvs.add(env);
       } catch (ConfigurationException | IOException e) {
-        cleanEnvironments(preparedEnvs);
-        LOGGER.error("prepareEnvironments() -> Could not prepare environment.", e);
+        clean(preparedEnvs);
+        LOGGER.error("prepare() -> Could not prepare environment.", e);
         throw new IOException(e);
+      }
+    }
+  }
+
+  @Override
+  public void restore(Collection<Environment> envs) throws IOException {
+    LOGGER.info("restore()");
+    Environment zeroEnvironment = findZeroEnvironment(envs);
+    String logFilePath = getLogFilePath();
+    for (Environment env : envs) {
+      prepareXMLAndEnvConfiguration(env, zeroEnvironment);
+      try {
+        env.removeFile(logFilePath);
+      } catch (InterruptedException e) {
+        LOGGER.info("restore() -> restore was interrupted. Leaving method.");
+        Thread.currentThread().interrupt();
+        return;
       }
     }
   }

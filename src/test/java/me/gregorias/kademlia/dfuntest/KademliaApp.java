@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Grzegorz Milka
  */
-public class KademliaApp extends App {
+public class KademliaApp extends App<Environment> {
   public static final String LOG_FILE = "stderr.log";
   private static final Logger LOGGER = LoggerFactory.getLogger(KademliaApp.class);
   private final Environment mKademliaEnv;
@@ -68,6 +68,11 @@ public class KademliaApp extends App {
       infos.add(bean.toNodeInfo());
     }
     return infos;
+  }
+
+  @Override
+  public Environment getEnvironment() {
+    return mKademliaEnv;
   }
 
   public Key getKey() throws IOException {
@@ -107,7 +112,6 @@ public class KademliaApp extends App {
     return infos;
   }
 
-  @Override
   public synchronized boolean isRunning() {
     return mProcess != null;
   }

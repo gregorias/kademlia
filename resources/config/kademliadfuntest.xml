@@ -11,6 +11,12 @@
             kademlia
         </dir-prefix>
     </environment-factory-config>
+    <full-environment-preparation>
+      true
+    </full-environment-preparation>
+    <clean-up-environment>
+      true
+    </clean-up-environment>
     <bucket-size>
         2
     </bucket-size>

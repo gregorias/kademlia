@@ -12,7 +12,7 @@ import me.gregorias.kademlia.interfaces.Main;
  *
  * @author Grzegorz Milka
  */
-public class KademliaAppFactory implements ApplicationFactory<KademliaApp> {
+public class KademliaAppFactory implements ApplicationFactory<Environment, KademliaApp> {
   private final String mJavaCommand;
 
   public KademliaAppFactory(String javaCommand) {
@@ -22,7 +22,6 @@ public class KademliaAppFactory implements ApplicationFactory<KademliaApp> {
   public KademliaApp newApp(Environment env) {
     String address;
     int port;
-    String javaCommand;
     try {
       address = (String) env.getProperty(Main.XML_FIELD_LOCAL_ADDRESS);
       port = (int) env.getProperty(Main.XML_FIELD_REST_PORT);
